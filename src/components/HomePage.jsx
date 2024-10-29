@@ -1,8 +1,14 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import "../css/HomePage.css";
 
 const HomePage = () => {
+  const navigate = useNavigate();
+  const handleStartShopping = () => {
+    navigate("/login");
+  };
+
   return (
     <div className="page">
       {/* רקעים מתחלפים */}
@@ -10,7 +16,7 @@ const HomePage = () => {
       <div className="background background2"></div>
 
       <div className="container">
-        <motion.h1 
+        <motion.h1
           className="header"
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -19,23 +25,23 @@ const HomePage = () => {
           ברוכים הבאים לחווית קניות חדשה
         </motion.h1>
 
-        <motion.p 
+        <motion.p
           className="text"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1, duration: 1 }}
         >
-          כאן תמצאו את כל מה שאתם צריכים במקום אחד, עם חווית משתמש מתקדמת ואינטואיטיבית.
+          כאן תמצאו את כל מה שאתם צריכים במקום אחד, עם חווית משתמש מתקדמת
+          ואינטואיטיבית.
         </motion.p>
 
-        <motion.button 
-          className="button"
-          whileTap={{ scale: 0.9 }}
+        <motion.button className="button" whileTap={{ scale: 0.9 }}
+        onClick={handleStartShopping}
         >
           התחילו לקנות עכשיו
         </motion.button>
 
-        <motion.div 
+        <motion.div
           className="offerBox"
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
