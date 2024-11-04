@@ -51,6 +51,7 @@ const LoginForm = ({ navigate }) => {
 
   const handleLogin = async () => {
     try {
+      console.log(7777);
       const response = await fetch("http://localhost:3001/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -58,13 +59,23 @@ const LoginForm = ({ navigate }) => {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "שגיאה בהתחברות");
+      if (!response.ok){
+        console.log(8888);
+
+        throw new Error(data.message || "שגיאה בהתחברות");
+      }
 
       // שמירת הטוקן ב-Local Storage אם ההתחברות הצליחה
       localStorage.setItem("token", data.token);
+      console.log(5555);
+      
       navigate("/online");
     } catch (err) {
+      console.log(6666);
+
       setError(err.message);
+
+
     }
   };
 

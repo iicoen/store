@@ -24,7 +24,10 @@ const Online = ({ user }) => {
         .then((res) => res.json())
         .then((data) => {
           if (data.valid) {
-            setUserId(data.userId); // שמירת מזהה המשתמש לשימוש בדף
+       
+
+              // שמירת מזהה המשתמש לשימוש בדף 
+            setUserId(data.userId);
           } else {
             navigate("/login"); // אם האסימון אינו תקף, חזרה לדף התחברות
           }
@@ -58,6 +61,16 @@ const Online = ({ user }) => {
     setCart([]);
   };
 
+
+   // פונקציה ליציאה
+   const handleLogout = () => {
+    localStorage.removeItem("token"); // מחיקת האסימון
+     // ניתוב מחדש לדף התחברות
+     navigate("/login");
+
+  };
+
+
   return (
     <div className="shopping-page">
       {/* כותרת */}
@@ -65,9 +78,12 @@ const Online = ({ user }) => {
         ברוכים הבאים לחנות שלנו!
       </Typography>
       <div>
-        <h2>ברוך הבא, מזהה המשתמש שלך הוא: {userId}</h2>
+        <h2>ברוך הבא, {userId}</h2>
       </div>
-
+  {/* כפתור יציאה */}
+      <Button variant="contained" color="secondary" onClick={handleLogout}>
+        יציאה
+      </Button>
       {/* רשימת מוצרים */}
       <div className="products-list">
         {products.map((product) => (
