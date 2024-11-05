@@ -15,6 +15,7 @@ const Online = ({ user }) => {
 
     if (!token) {
       navigate("/login");
+
     } else {
       // אימות האסימון ולקיחת מזהה משתמש
       fetch("http://localhost:3001/verify-token", {
@@ -24,11 +25,12 @@ const Online = ({ user }) => {
         .then((res) => res.json())
         .then((data) => {
           if (data.valid) {
-       
 
               // שמירת מזהה המשתמש לשימוש בדף 
             setUserId(data.userId);
           } else {
+            console.log(2222);
+
             navigate("/login"); // אם האסימון אינו תקף, חזרה לדף התחברות
           }
         })
