@@ -36,7 +36,7 @@ const LoginPage = () => {
         transition={{ type: "spring", stiffness: 50 }}
         className="admin-button-container"
       >
-        <Button variant="contained" color="secondary">
+        <Button variant="contained" color="secondary"  onClick={()=>{navigate("/adminPanel")}}>
           כניסת מנהלים
         </Button>
       </motion.div>

@@ -185,6 +185,42 @@ app.post("/register", async (req, res) => {
   }
 });
 
+
+
+// ממשק ניהול
+app.get("/api/products", (req, res) => {
+  db.query("SELECT * FROM Products", (error, results) => {
+      if (error) {
+          res.status(500).send(error);
+      } else {
+          res.json(results);
+      }
+  });
+});
+
+app.post("/api/products", (req, res) => {
+  const { name, price, description, quantity } = req.body;
+  const sql = "INSERT INTO Products (product_name, price, description, quantity_in_stock) VALUES (?, ?, ?, ?)";
+  db.query(sql, [name, price, description, quantity], (error, results) => {
+      if (error) {
+          res.status(500).send(error);
+      } else {
+          res.status(201).send("Product added");
+      }
+  });
+});
+
+app.delete("/api/products/:id", (req, res) => {
+  const productId = req.params.id;
+  db.query("DELETE FROM Products WHERE product_id = ?", [productId], (error) => {
+      if (error) {
+          res.status(500).send(error);
+      } else {
+          res.send("Product deleted");
+      }
+  });
+});
+
 // הפעלת השרת
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

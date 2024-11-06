@@ -29,7 +29,6 @@ const Online = ({ user }) => {
               // שמירת מזהה המשתמש לשימוש בדף 
             setUserId(data.userId);
           } else {
-            console.log(2222);
 
             navigate("/login"); // אם האסימון אינו תקף, חזרה לדף התחברות
           }
@@ -41,7 +40,8 @@ const Online = ({ user }) => {
   // טוען מוצרים מהדאטה בייס
   useEffect(() => {
     const fetchProducts = async () => {
-      const response = await fetch("http://localhost:3001/products");
+      // const response = await fetch("http://localhost:3001/products");
+      const response = await fetch("http://localhost:3001/api/products");
       const data = await response.json();
       setProducts(data);
     };
@@ -95,7 +95,7 @@ const Online = ({ user }) => {
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <Typography variant="h6">{product.name}</Typography>
+            <Typography variant="h6">{product.product_name}</Typography>
             <Typography variant="body2">{product.description}</Typography>
             <Typography variant="body1">₪{product.price}</Typography>
             <TextField
@@ -103,8 +103,9 @@ const Online = ({ user }) => {
               defaultValue={1}
               className="quantity-input"
               label="כמות"
-              InputProps={{ inputProps: { min: 1 } }}
+              // inputProps={{ inputProps: { min: 1 } }}
             />
+            
             <Button
               variant="contained"
               color="primary"
@@ -121,7 +122,7 @@ const Online = ({ user }) => {
         <Typography variant="h5">סל הקניות</Typography>
         {cart.map((item, index) => (
           <Typography key={index}>
-            {item.name} - ₪{item.price} ({item.quantity})
+            {item.product_name} - ₪{item.price} ({item.quantity})
           </Typography>
         ))}
         <Button
