@@ -3,6 +3,7 @@ import ProductManagement from "./ProductManagement";
 import CustomerManagement from "./CustomerManagement";
 import OrderManagement from "./OrderManagement";
 import Reports from "./Reports";
+import CategoryManagement from "./CategoryManagement"; // ייבוא רכיב ניהול קטגוריות
 
 const AdminPanel = () => {
     const [selectedSection, setSelectedSection] = useState("products");
@@ -17,6 +18,8 @@ const AdminPanel = () => {
                 return <OrderManagement />;
             case "reports":
                 return <Reports />;
+                case "categories": // הוספת מקרה לניהול קטגוריות
+                return <CategoryManagement />;
             default:
                 return <ProductManagement />;
         }
@@ -30,6 +33,8 @@ const AdminPanel = () => {
                 <button onClick={() => setSelectedSection("customers")}>ניהול לקוחות</button>
                 <button onClick={() => setSelectedSection("orders")}>ניהול הזמנות</button>
                 <button onClick={() => setSelectedSection("reports")}>דוחות</button>
+                <button onClick={() => setSelectedSection("categories")}>ניהול קטגוריות</button> {/* כפתור לניהול קטגוריות */}
+
             </nav>
             <div>{renderSection()}</div>
         </div>

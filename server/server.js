@@ -221,6 +221,41 @@ app.delete("/api/products/:id", (req, res) => {
   });
 });
 
+
+
+
+
+
+
+
+// שליפת כל הקטגוריות
+app.get('/api/categories', async (req, res) => {
+    try {
+        const [categories] = await db.promise().query('SELECT * FROM Categories');
+        res.json(categories);
+    } catch (error) {
+        res.status(500).json({ error: 'שגיאה בשליפת קטגוריות' });
+    }
+});
+
+// הוספת קטגוריה חדשה
+app.post('/api/categories', async (req, res) => {
+    const { category_name } = req.body;
+    try {
+        await db.promise().query('INSERT INTO Categories (category_name) VALUES (?)', [category_name]);
+        res.status(201).json({ message: 'קטגוריה נוספה בהצלחה' });
+    } catch (error) {
+        res.status(500).json({ error: 'שגיאה בהוספת קטגוריה' });
+    }
+});
+
+
+
+
+
+
+
+
 // הפעלת השרת
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
