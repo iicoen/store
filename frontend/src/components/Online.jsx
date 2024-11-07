@@ -7,17 +7,16 @@ import "../css/Online.css";
 const Online = ({ user }) => {
   const [cart, setCart] = useState([]);
   const [products, setProducts] = useState([]);
+  const [quantities, setQuantities] = useState({});
   const navigate = useNavigate();
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token"); // מבדוק אם יש אסימון שמור
+    const token = localStorage.getItem("token");
 
     if (!token) {
       navigate("/login");
-
     } else {
-      // אימות האסימון ולקיחת מזהה משתמש
       fetch("http://localhost:3001/verify-token", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
@@ -25,22 +24,17 @@ const Online = ({ user }) => {
         .then((res) => res.json())
         .then((data) => {
           if (data.valid) {
-
-              // שמירת מזהה המשתמש לשימוש בדף 
             setUserId(data.userId);
           } else {
-
-            navigate("/login"); // אם האסימון אינו תקף, חזרה לדף התחברות
+            navigate("/login");
           }
         })
         .catch(() => navigate("/login"));
     }
   }, [navigate]);
 
-  // טוען מוצרים מהדאטה בייס
   useEffect(() => {
     const fetchProducts = async () => {
-      // const response = await fetch("http://localhost:3001/products");
       const response = await fetch("http://localhost:3001/api/products");
       const data = await response.json();
       setProducts(data);
@@ -48,12 +42,25 @@ const Online = ({ user }) => {
     fetchProducts();
   }, []);
 
-  // הוספה לסל
-  const addToCart = (product) => {
-    setCart((prev) => [...prev, product]);
+  // עדכון כמות המוצרים בשדה הקלט לפי מוצר
+  const handleQuantityChange = (e, productId) => {
+    const quantity = parseInt(e.target.value) || 1;
+    setQuantities((prev) => ({ ...prev, [productId]: quantity }));
   };
 
-  // פונקציה לטיפול בהזמנה
+  // הוספה לסל עם כמות
+  const addToCart = (product) => {
+    const quantity = quantities[product.id] || 1;
+    const existingProductIndex = cart.findIndex((item) => item.id === product.id);
+    // if (existingProductIndex >= 0) {
+    //   const updatedCart = [...cart];
+    //   updatedCart[existingProductIndex].quantity += quantity;
+    //   setCart(updatedCart);
+    // } else {
+      setCart((prev) => [...prev, { ...product, quantity }]);
+    // }
+  };
+
   const handleOrderSubmit = async () => {
     await fetch("http://localhost:3001/checkout", {
       method: "POST",
@@ -63,30 +70,27 @@ const Online = ({ user }) => {
     setCart([]);
   };
 
-
-   // פונקציה ליציאה
-   const handleLogout = () => {
-    localStorage.removeItem("token"); // מחיקת האסימון
-     // ניתוב מחדש לדף התחברות
-     navigate("/login");
-
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
+  // חישוב הסכום הכולל של הסל
+  const calculateTotal = () => {
+    return cart.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
+  };
 
   return (
     <div className="shopping-page">
-      {/* כותרת */}
       <Typography variant="h4" className="page-title">
         ברוכים הבאים לחנות שלנו!
       </Typography>
       <div>
         <h2>ברוך הבא, {userId}</h2>
       </div>
-  {/* כפתור יציאה */}
       <Button variant="contained" color="secondary" onClick={handleLogout}>
         יציאה
       </Button>
-      {/* רשימת מוצרים */}
       <div className="products-list">
         {products.map((product) => (
           <motion.div
@@ -103,9 +107,8 @@ const Online = ({ user }) => {
               defaultValue={1}
               className="quantity-input"
               label="כמות"
-              // inputProps={{ inputProps: { min: 1 } }}
+              onChange={(e) => handleQuantityChange(e, product.id)}
             />
-            
             <Button
               variant="contained"
               color="primary"
@@ -117,24 +120,19 @@ const Online = ({ user }) => {
         ))}
       </div>
 
-      {/* סל קניות */}
       <Box className="cart-section">
         <Typography variant="h5">סל הקניות</Typography>
         {cart.map((item, index) => (
           <Typography key={index}>
-            {item.product_name} - ₪{item.price} ({item.quantity})
+            {item.product_name} - ({item.quantity} יחי') ₪{(item.price * item.quantity).toFixed(2)}
           </Typography>
         ))}
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={handleOrderSubmit}
-        >
+        <Typography variant="h6">סה"כ: ₪{calculateTotal()}</Typography>
+        <Button variant="contained" color="secondary" onClick={handleOrderSubmit}>
           בצע הזמנה
         </Button>
       </Box>
 
-      {/* צפייה בהזמנות קודמות */}
       <Button
         variant="outlined"
         color="primary"
