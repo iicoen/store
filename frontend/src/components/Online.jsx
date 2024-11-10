@@ -10,9 +10,10 @@ const Online = ({ user }) => {
   const [quantities, setQuantities] = useState({});
   const navigate = useNavigate();
   const [userId, setUserId] = useState(null);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    // const token = localStorage.getItem("token");
 
     if (!token) {
       navigate("/login");
@@ -59,6 +60,24 @@ const Online = ({ user }) => {
     // } else {
       setCart((prev) => [...prev, { ...product, quantity }]);
     // }
+// קריאה לשרת עם ה ID של המוצר ועם הכמות
+
+console.log("Product ID:", product.product_id);
+console.log("Quantity:", quantity);
+
+fetch("http://localhost:3001/updateCart", {
+  method: "POST",
+  // headers: { Authorization: `Bearer ${token}`},
+  headers: { 
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`
+  },
+  body: JSON.stringify({
+    product_id: product.product_id,
+    quantity: quantity
+  }),
+})
+
   };
 
   const handleOrderSubmit = async () => {

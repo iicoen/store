@@ -18,12 +18,27 @@ app.use(cors());
 app.use(express.json());
 
 // חיבור למסד הנתונים
-const db = mysql.createConnection({
+// const db = mysql.createConnection({
+//   host: process.env.DB_HOST,
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASSWORD,
+//   database: process.env.DB_NAME,
+// });
+
+
+const mysql = require("mysql2");
+const db = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
+
+
+
 
 db.connect((err) => {
   if (err) throw err;
@@ -72,7 +87,6 @@ app.get("/user-orders", authenticateToken, (req, res) => {
 app.post("/verify-token", (req, res) => {
   const token = req.headers["authorization"]?.split(" ")[1];
   if (!token) {
-    console.log(222);
     return res.status(401).json({ valid: false });
   }
 
@@ -80,6 +94,7 @@ app.post("/verify-token", (req, res) => {
     if (err) return res.status(403).json({ valid: false });
 
     try {
+      
       const fullNameQuery = `SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM customers WHERE identity_number = ?;`;
       const [results] = await db.promise().query(fullNameQuery, [user.identity]); // מחכים לתוצאה של השאילתא
 
@@ -88,6 +103,35 @@ app.post("/verify-token", (req, res) => {
     } catch (queryError) {
       console.error("Query Error:", queryError);
       res.status(500).json({ valid: false, error: "Database query failed" });
+    }
+  });
+});
+
+
+app.post("/updateCart", (req, res) => {
+  const token = req.headers["authorization"]?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ valid: false });
+  }
+
+  jwt.verify(token, SECRET_KEY, async (err, user) => {
+    if (err) return res.status(403).json({ valid: false });
+
+    try {
+const userId=user.userId;
+const { product_id, quantity } = req.body; 
+
+console.log(userId, product_id, quantity);
+
+const newProductCartQuery=`INSERT INTO cartitems (customer_id, product_id, quantity) VALUES (?,?,?)`;
+db.query(newProductCartQuery, [userId, product_id, quantity]);
+connection.release(); // שחרור החיבור למאגר
+
+
+      res.status(200).json({ valid: true }); 
+    } catch (queryError) {
+      console.error("Query Error:", queryError);
+      res.status(500).json({ valid: false, error: "" });
     }
   });
 });
@@ -112,7 +156,8 @@ app.post("/login", async (req, res) => {
       if (!isPasswordMatch) {
         return res.status(400).json({ message: "תעודת זהות או סיסמה שגויים" });
       }
-      console.log(user.user_id); // יצירת טוקן
+      // console.log(user.user_id); 
+      // יצירת טוקן
       const token = jwt.sign(
         { userId: user.user_id, identity: user.identity_number },
         SECRET_KEY,
