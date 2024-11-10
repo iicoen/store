@@ -8,6 +8,10 @@ const jwt = require("jsonwebtoken");
 const SECRET_KEY = "your_secret_key";
 // const bcrypt = require("bcryptjs");
 const bcrypt = require("bcrypt");
+// require('dotenv').config();
+// console.log('dotenv loaded:', process.env.DB_HOST !== undefined);
+require('dotenv').config({ path: 'C:\\Users\\JBH\\Desktop\\Final project\\store\\backend\\server\\process.env' });
+
 
 // מאשר לכל הדומיינים
 app.use(cors());
@@ -15,10 +19,10 @@ app.use(express.json());
 
 // חיבור למסד הנתונים
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "123456",
-  database: "store",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 });
 
 db.connect((err) => {
