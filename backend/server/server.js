@@ -9,6 +9,7 @@ const SECRET_KEY = "your_secret_key";
 // const bcrypt = require("bcryptjs");
 const bcrypt = require("bcrypt");
 const path = require('path');
+const { log } = require("console");
 require('dotenv').config({ path: path.join(__dirname, 'process.env') });
 
 // require('dotenv').config();
@@ -99,7 +100,7 @@ app.post("/verify-token", (req, res) => {
       const fullNameQuery = `SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM customers WHERE identity_number = ?;`;
       const [results] = await db.promise().query(fullNameQuery, [user.identity]); // מחכים לתוצאה של השאילתא
 
-      const fullName = results.length > 0 ? results[0].full_name : null; // מחלצים את השם המלא // מדפיסים את השם המלא // console.log(`Full Name: ${fullName}`);
+      const fullName = results.length > 0 ? results[0].full_name : null; // מחלצים את השם המלא // מדפיסים את השם המלא // 
       res.status(200).json({ valid: true, userId: fullName }); // מחזירים את השם המלא
     } catch (queryError) {
       console.error("Query Error:", queryError);
@@ -151,8 +152,7 @@ app.post("/updateCart", (req, res) => {
       const userId = user.userId;
       const { product_id, quantity } = req.body; 
       
-      console.log(userId, product_id, quantity);
-      
+    
       const upsertCartItemQuery = `INSERT INTO CartItems (customer_id, product_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity), updated_at = CURRENT_TIMESTAMP`;
       
       db.query(upsertCartItemQuery, [userId, product_id, quantity], (error, results) => {
@@ -168,6 +168,35 @@ app.post("/updateCart", (req, res) => {
     }
   });
 });
+
+
+// מסלול להחזרת פרטי העגלה עבור המשתמש
+app.get("/api/cart", (req, res) => {
+  const token = req.headers["authorization"]?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ valid: false });
+  }
+
+  jwt.verify(token, SECRET_KEY, async (err, user) => {
+    if (err) return res.status(403).json({ valid: false });
+    try {
+      const userId = user.userId;
+      const getCartItemsQuery = `SELECT p.product_id, p.product_name, p.price, ci.quantity FROM CartItems ci JOIN Products p ON ci.product_id = p.product_id WHERE ci.customer_id = ?`;
+      db.query(getCartItemsQuery, [userId], (error, results) => {
+        
+        if (error) {
+          console.error("Query Error:", error);
+          return res.status(500).json({ valid: false, error: "Database error" });
+        }
+        res.status(200).json({ valid: true, cartItems: results });
+      });
+    } catch (queryError) {
+      console.error("Query Error:", queryError);
+      res.status(500).json({ valid: false, error: "Internal server error" });
+    }
+  });
+});
+
 
 
 app.post("/login", async (req, res) => {
@@ -190,7 +219,6 @@ app.post("/login", async (req, res) => {
       if (!isPasswordMatch) {
         return res.status(400).json({ message: "תעודת זהות או סיסמה שגויים" });
       }
-      // console.log(user.user_id); 
       // יצירת טוקן
       const token = jwt.sign(
         { userId: user.user_id, identity: user.identity_number },

@@ -13,8 +13,6 @@ const Online = ({ user }) => {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    // const token = localStorage.getItem("token");
-
     if (!token) {
       navigate("/login");
     } else {
@@ -26,6 +24,7 @@ const Online = ({ user }) => {
         .then((data) => {
           if (data.valid) {
             setUserId(data.userId);
+            fetchCart(data.userId); // טוען את העגלה מהשרת
           } else {
             navigate("/login");
           }
@@ -36,65 +35,83 @@ const Online = ({ user }) => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const response = await fetch("http://localhost:3001/api/products");
+      const response = await fetch("http://localhost:3001/api/products", 
+        {method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
+      // console.log(data);
+      
       setProducts(data);
     };
     fetchProducts();
   }, []);
 
-  // עדכון כמות המוצרים בשדה הקלט לפי מוצר
+
+  
+
+  // פונקציה לטעינת נתוני העגלה מהשרת
+  const fetchCart = async () => {
+    const response = await fetch(`http://localhost:3001/api/cart`, 
+      {method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await response.json();
+  
+    if (Array.isArray(data.cartItems)) {
+      setCart(data.cartItems);
+    }
+  };
+
   const handleQuantityChange = (e, productId) => {
     const quantity = parseInt(e.target.value) || 1;
     setQuantities((prev) => ({ ...prev, [productId]: quantity }));
   };
 
-  // הוספה לסל עם כמות
-  const addToCart = (product) => {
+  const addToCart = async (product) => {
     const quantity = quantities[product.id] || 1;
-    const existingProductIndex = cart.findIndex((item) => item.id === product.id);
-    // if (existingProductIndex >= 0) {
-    //   const updatedCart = [...cart];
-    //   updatedCart[existingProductIndex].quantity += quantity;
-    //   setCart(updatedCart);
-    // } else {
-      setCart((prev) => [...prev, { ...product, quantity }]);
-    // }
-// קריאה לשרת עם ה ID של המוצר ועם הכמות
-
-console.log("Product ID:", product.product_id);
-console.log("Quantity:", quantity);
-
-fetch("http://localhost:3001/updateCart", {
-  method: "POST",
-  // headers: { Authorization: `Bearer ${token}`},
-  headers: { 
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`
-  },
-  body: JSON.stringify({
-    product_id: product.product_id,
-    quantity: quantity
-  }),
-})
-
-  };
-
-  const handleOrderSubmit = async () => {
-    await fetch("http://localhost:3001/checkout", {
+    await fetch("http://localhost:3001/updateCart", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: user.id, items: cart }),
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        product_id: product.product_id,
+        quantity: quantity
+      }),
     });
-    setCart([]);
+  
+    fetchCart(userId); // טוען מחדש את העגלה לאחר עדכון
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+  // פונקציה לעדכון כמות מוצר בעגלה
+  const updateCartItem = async (productId, newQuantity) => {
+    await fetch(`http://localhost:3001/api/updateCartItem`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        product_id: productId,
+        quantity: newQuantity
+      })
+    });
+    fetchCart(userId);
   };
 
-  // חישוב הסכום הכולל של הסל
+  // פונקציה למחיקת מוצר מהעגלה
+  const removeCartItem = async (productId) => {
+    await fetch(`http://localhost:3001/api/removeCartItem?productId=${productId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    fetchCart(userId);
+  };
+
   const calculateTotal = () => {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
   };
@@ -107,7 +124,7 @@ fetch("http://localhost:3001/updateCart", {
       <div>
         <h2>ברוך הבא, {userId}</h2>
       </div>
-      <Button variant="contained" color="secondary" onClick={handleLogout}>
+      <Button variant="contained" color="secondary" onClick={() => { localStorage.removeItem("token"); navigate("/login"); }}>
         יציאה
       </Button>
       <div className="products-list">
@@ -142,14 +159,21 @@ fetch("http://localhost:3001/updateCart", {
       <Box className="cart-section">
         <Typography variant="h5">סל הקניות</Typography>
         {cart.map((item, index) => (
-          <Typography key={index}>
-            {item.product_name} - ({item.quantity} יחי') ₪{(item.price * item.quantity).toFixed(2)}
-          </Typography>
+          <div key={index}>
+            <Typography>
+              {item.product_name} - ({item.quantity} יחי') ₪{(item.price * item.quantity).toFixed(2)}
+            </Typography>
+            <TextField
+              type="number"
+              value={item.quantity}
+              onChange={(e) => updateCartItem(item.product_id, parseInt(e.target.value))}
+            />
+            <Button variant="outlined" color="secondary" onClick={() => removeCartItem(item.product_id)}>
+              מחק
+            </Button>
+          </div>
         ))}
         <Typography variant="h6">סה"כ: ₪{calculateTotal()}</Typography>
-        <Button variant="contained" color="secondary" onClick={handleOrderSubmit}>
-          בצע הזמנה
-        </Button>
       </Box>
 
       <Button
