@@ -8,9 +8,11 @@ const jwt = require("jsonwebtoken");
 const SECRET_KEY = "your_secret_key";
 // const bcrypt = require("bcryptjs");
 const bcrypt = require("bcrypt");
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, 'process.env') });
+
 // require('dotenv').config();
 // console.log('dotenv loaded:', process.env.DB_HOST !== undefined);
-require('dotenv').config({ path: 'C:\\Users\\JBH\\Desktop\\Final project\\store\\backend\\server\\process.env' });
 
 
 // מאשר לכל הדומיינים
@@ -18,24 +20,23 @@ app.use(cors());
 app.use(express.json());
 
 // חיבור למסד הנתונים
-// const db = mysql.createConnection({
-//   host: process.env.DB_HOST,
-//   user: process.env.DB_USER,
-//   password: process.env.DB_PASSWORD,
-//   database: process.env.DB_NAME,
-// });
-
-
-const mysql = require("mysql2");
-const db = mysql.createPool({
+const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
 });
+
+
+// const db = mysql.createPool({
+//   host: process.env.DB_HOST,
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASSWORD,
+//   database: process.env.DB_NAME,
+//   waitForConnections: true,
+//   connectionLimit: 10,
+//   queueLimit: 0,
+// });
 
 
 
@@ -108,6 +109,35 @@ app.post("/verify-token", (req, res) => {
 });
 
 
+// app.post("/updateCart", (req, res) => {
+//   const token = req.headers["authorization"]?.split(" ")[1];
+//   if (!token) {
+//     return res.status(401).json({ valid: false });
+//   }
+
+//   jwt.verify(token, SECRET_KEY, async (err, user) => {
+//     if (err) return res.status(403).json({ valid: false });
+
+//     try {
+// const userId=user.userId;
+// const { product_id, quantity } = req.body; 
+
+// console.log(userId, product_id, quantity);
+
+// const newProductCartQuery=`INSERT INTO cartitems (customer_id, product_id, quantity) VALUES (?,?,?)`;
+// db.query(newProductCartQuery, [userId, product_id, quantity]);
+// // connection.release(); // שחרור החיבור למאגר
+
+
+//       res.status(200).json({ valid: true }); 
+//     } catch (queryError) {
+//       console.error("Query Error:", queryError);
+//       res.status(500).json({ valid: false, error: "" });
+//     }
+//   });
+// });
+
+
 app.post("/updateCart", (req, res) => {
   const token = req.headers["authorization"]?.split(" ")[1];
   if (!token) {
@@ -118,23 +148,27 @@ app.post("/updateCart", (req, res) => {
     if (err) return res.status(403).json({ valid: false });
 
     try {
-const userId=user.userId;
-const { product_id, quantity } = req.body; 
-
-console.log(userId, product_id, quantity);
-
-const newProductCartQuery=`INSERT INTO cartitems (customer_id, product_id, quantity) VALUES (?,?,?)`;
-db.query(newProductCartQuery, [userId, product_id, quantity]);
-connection.release(); // שחרור החיבור למאגר
-
-
-      res.status(200).json({ valid: true }); 
+      const userId = user.userId;
+      const { product_id, quantity } = req.body; 
+      
+      console.log(userId, product_id, quantity);
+      
+      const upsertCartItemQuery = `INSERT INTO CartItems (customer_id, product_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity), updated_at = CURRENT_TIMESTAMP`;
+      
+      db.query(upsertCartItemQuery, [userId, product_id, quantity], (error, results) => {
+        if (error) {
+          console.error("Query Error:", error);
+          return res.status(500).json({ valid: false, error: "Database error" });
+        }
+        res.status(200).json({ valid: true });
+      });
     } catch (queryError) {
       console.error("Query Error:", queryError);
-      res.status(500).json({ valid: false, error: "" });
+      res.status(500).json({ valid: false, error: "Internal server error" });
     }
   });
 });
+
 
 app.post("/login", async (req, res) => {
   const { identity_number, password } = req.body;
