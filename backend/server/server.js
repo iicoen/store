@@ -97,6 +97,7 @@ app.post("/verify-token", (req, res) => {
 
     try {
       
+      
       const fullNameQuery = `SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM customers WHERE identity_number = ?;`;
       const [results] = await db.promise().query(fullNameQuery, [user.identity]); // מחכים לתוצאה של השאילתא
 
@@ -211,6 +212,7 @@ app.post("/login", async (req, res) => {
         return res.status(400).json({ message: "תעודת זהות או סיסמה שגויים" });
       }
 
+
       const user = results[0]; // בדיקת התאמה של הסיסמה המוצפנת
       const isPasswordMatch = await bcrypt.compare(
         password,
@@ -219,15 +221,29 @@ app.post("/login", async (req, res) => {
       if (!isPasswordMatch) {
         return res.status(400).json({ message: "תעודת זהות או סיסמה שגויים" });
       }
+
+     
+           // שאילתת שאיבה של userId מטבלת customers לפי מספר הזהות
+           const customerQuery = "SELECT customer_id FROM customers WHERE identity_number = ?";
+           db.query(customerQuery, [identity_number], (err, customerResults) => {
+             if (err) return res.status(500).json({ error: "שגיאת מסד נתונים" });
+             if (customerResults.length === 0) {
+               return res.status(400).json({ message: "הלקוח לא נמצא" });
+             }
+     
+             const userId = customerResults[0].customer_id;
+
+
       // יצירת טוקן
       const token = jwt.sign(
-        { userId: user.user_id, identity: user.identity_number },
+        { userId: userId, identity: user.identity_number },
         SECRET_KEY,
         { expiresIn: "1h" }
       ); // החזרת הטוקן ללקוח
 
       res.status(200).json({ message: "התחברות הצליחה", token });
     });
+  });
   } catch (error) {
     res.status(500).json({ error: "שגיאת שרת" });
   }
