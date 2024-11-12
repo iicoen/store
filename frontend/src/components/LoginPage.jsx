@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { TextField, Button, Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import "../css/LoginPage.css";
-
+import apiUrl from '../config.js';
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
@@ -51,7 +51,7 @@ const LoginForm = ({ navigate }) => {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch("http://localhost:3001/login", {
+      const response = await fetch(`${apiUrl}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identity_number: identityNumber, password }),
@@ -130,7 +130,7 @@ const RegisterForm = ({ setIsLogin }) => {
     if (!validateForm()) return;
 
     try {
-      const response = await fetch("http://localhost:3001/register", {
+      const response = await fetch(`${apiUrl}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

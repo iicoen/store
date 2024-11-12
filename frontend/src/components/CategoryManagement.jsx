@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-
+import apiUrl from '../config.js';
 const CategoryManagement = () => {
     const [categoryName, setCategoryName] = useState('');
 
     const handleAddCategory = async () => {
         try {
-            await axios.post('http://localhost:3001/api/categories', { category_name: categoryName });
+            await axios.post(`${apiUrl}/api/categories`, { category_name: categoryName });
             alert('קטגוריה נוספה בהצלחה!');
             setCategoryName('');
         } catch (error) {
