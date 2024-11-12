@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Button, TextField, Typography, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import "../css/Online.css";
+import apiUrl from '../config.js';
 
 const Online = ({ user }) => {
   const [cart, setCart] = useState([]);
@@ -14,9 +15,9 @@ const Online = ({ user }) => {
 
   useEffect(() => {
     if (!token) {
-      navigate("/login");
+      navigate("/login"); 
     } else {
-      fetch("http://localhost:3001/verify-token", {
+      fetch(`${apiUrl}/verify-token`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       })
