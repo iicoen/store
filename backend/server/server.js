@@ -337,6 +337,8 @@ app.post("/api/products", (req, res) => {
   });
 });
 
+
+
 app.delete("/api/products/:id", (req, res) => {
   const productId = req.params.id;
   db.query("DELETE FROM Products WHERE product_id = ?", [productId], (error) => {
@@ -378,8 +380,59 @@ app.post('/api/categories', async (req, res) => {
 
 
 
+// עדכון כמות בתוך העגלה
+app.put(`/api/updateCartItem`, (req, res)=>{
+  const token = req.headers["authorization"]?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ valid: false });
+  }
+  jwt.verify(token, SECRET_KEY, async (err, user) => {
+    if (err) return res.status(403).json({ valid: false });
 
+    try {
+      const userId = user.userId;
+      const { product_id, quantity } = req.body; 
+      const query = `UPDATE CartItems SET quantity = ? WHERE customer_id = ? AND product_id = ?`;      
+      db.query(query, [quantity, userId, product_id], (error, results) => {
+        if (error) {
+          console.error("Query Error:", error);
+          return res.status(500).json({ valid: false, error: "Database error" });
+        }
+        res.status(200).json({ valid: true });
+      });
+    } catch (queryError) {
+      console.error("Query Error:", queryError);
+      res.status(500).json({ valid: false, error: "Internal server error" });
+    }
+  });
+});
+// מחיקת מוצר מתוך העגלה
+app.delete(`/api/removeCartItem`, (req, res)=>{
+  const token = req.headers["authorization"]?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ valid: false });
+  }
+  jwt.verify(token, SECRET_KEY, async (err, user) => {
+    if (err) return res.status(403).json({ valid: false });
 
+    try {
+      const userId = user.userId;
+      const productId = req.query.productId;
+      const query = `DELETE FROM CartItems WHERE customer_id = ? AND product_id = ?`;
+     
+      db.query(query, [userId, productId], (error, results) => {
+        if (error) {
+          console.error("Query Error:", error);
+          return res.status(500).json({ valid: false, error: "Database error" });
+        }
+        res.status(200).json({ valid: true });
+      });
+    } catch (queryError) {
+      console.error("Query Error:", queryError);
+      res.status(500).json({ valid: false, error: "Internal server error" });
+    }
+  });
+});
 
 
 

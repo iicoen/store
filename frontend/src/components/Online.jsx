@@ -59,11 +59,18 @@ const Online = ({ user }) => {
   };
 
   const handleQuantityChange = async (e, productId) => {
-    console.log(2222);
-    
     const quantity = parseInt(e.target.value) || 1;
      setQuantities((prev) => ({ ...prev, [productId]: quantity }));
 
+  };
+  const handleQuantityChange2 = (productId, newQuantity) => {
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.product_id === productId
+          ? { ...item, quantity: parseInt(newQuantity) }
+          : item
+      )
+    );
   };
 
   const addToCart = async (e, product) => {
@@ -98,6 +105,7 @@ const Online = ({ user }) => {
     fetchCart(userId);
   };
 
+
   // פונקציה למחיקת מוצר מהעגלה
   const removeCartItem = async (productId) => {
     await fetch(`${apiUrl}/api/removeCartItem?productId=${productId}`, {
@@ -112,6 +120,8 @@ const Online = ({ user }) => {
   const calculateTotal = () => {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
   };
+
+ 
 
   // פונקציה לביצוע הזמנה
   const handleOrderSubmit=()=>{};
@@ -172,7 +182,10 @@ const Online = ({ user }) => {
               type="number"
               value={item.quantity}
               label="עדכן כמות"
-              onChange={(e) => handleQuantityChange(e, item.product_id)}
+              // onChange={(e) => updateCartItem(item.product_id, e.target.value)}
+              onChange={(e) => handleQuantityChange2(item.product_id, e.target.value)}
+              onBlur={(e) => updateCartItem(item.product_id, e.target.value)}
+
             />
             <Button variant="outlined" color="secondary" onClick={() => removeCartItem(item.product_id)}>
               מחק
