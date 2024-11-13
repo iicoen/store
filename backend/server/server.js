@@ -326,9 +326,9 @@ app.get("/api/products", (req, res) => {
 });
 
 app.post("/api/products", (req, res) => {
-  const { name, price, description, quantity } = req.body;
-  const sql = "INSERT INTO Products (product_name, price, description, quantity_in_stock) VALUES (?, ?, ?, ?)";
-  db.query(sql, [name, price, description, quantity], (error, results) => {
+  const { name, price, description, quantity,category_id } = req.body;
+  const sql = "INSERT INTO Products (product_name, price, description, quantity_in_stock, category_id) VALUES (?, ?, ?, ?,?)";
+  db.query(sql, [name, price, description, quantity,category_id], (error, results) => {
       if (error) {
           res.status(500).send(error);
       } else {

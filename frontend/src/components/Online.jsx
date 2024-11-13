@@ -38,7 +38,7 @@ const Online = ({ user }) => {
         {method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await response.json();      
+      const data = await response.json();
       setProducts(data);
     };
     fetchProducts();

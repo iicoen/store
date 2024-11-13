@@ -29,7 +29,7 @@ const ProductManagement = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await axios.get(`${apiUrl}/api/categories`);
+            const response = await axios.get(`${apiUrl}/api/categories`);        
             setCategories(response.data);
         } catch (error) {
             console.error("Error fetching categories", error);
@@ -37,6 +37,8 @@ const ProductManagement = () => {
     };
 
     const addProduct = async () => {
+        console.log(newProduct);
+        
         try {
             await axios.post(`${apiUrl}/api/products`, newProduct);
             fetchProducts();
@@ -85,9 +87,10 @@ const ProductManagement = () => {
             {/* שדה בחירת קטגוריה */}
             <select
                 value={newProduct.category_id}
-                onChange={(e) => setNewProduct({ ...newProduct, category_id: e.target.value })}
+                onChange={(e) => setNewProduct({ ...newProduct, category_id: e.target.value})}
             >
-                <option value="">בחר קטגוריה</option>
+                <option value=""
+                >בחר קטגוריה</option>
                 {categories.map((category) => (
                     <option key={category.category_id} value={category.category_id}>
                         {category.category_name}
