@@ -4,6 +4,7 @@ import {Card, CardContent, Button, TextField, Typography, Box } from "@mui/mater
 import { useNavigate } from "react-router-dom";
 import "../css/Online.css";
 import apiUrl from '../config.js';
+import HostagesTicker from './HostagesTicker';
 const Online = ({ user }) => {
   const [cart, setCart] = useState([]);
   const [products, setProducts] = useState([]);
@@ -206,6 +207,7 @@ const Online = ({ user }) => {
       >
         הזמנות קודמות
       </Button>
+      <HostagesTicker/>
     </div>
   );
 };

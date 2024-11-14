@@ -37,8 +37,6 @@ const ProductManagement = () => {
     };
 
     const addProduct = async () => {
-        console.log(newProduct);
-        
         try {
             await axios.post(`${apiUrl}/api/products`, newProduct);
             fetchProducts();
