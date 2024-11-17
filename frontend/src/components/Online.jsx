@@ -5,13 +5,19 @@ import { useNavigate } from "react-router-dom";
 import "../css/Online.css";
 import apiUrl from '../config.js';
 import HostagesTicker from './HostagesTicker';
+import MessagePopup from './MessagePopup';
+
 const Online = ({ user }) => {
   const [cart, setCart] = useState([]);
   const [products, setProducts] = useState([]);
   const [quantities, setQuantities] = useState({});
   const navigate = useNavigate();
   const [userId, setUserId] = useState(null);
+  const [message, setMessage] = useState("");
   const token = localStorage.getItem("token");
+  const [showCart, setShowCart] = useState(false);
+
+
   useEffect(() => {
     if (!token) {
       navigate("/login"); 
@@ -76,7 +82,8 @@ const Online = ({ user }) => {
 
   const addToCart = async (e, product) => {
     const quantity = quantities[product.product_id] || 1; // משתמש בכמות עבור כל מוצר מהמצב
-    await fetch(`${apiUrl}/updateCart`, {
+    try {
+    const res= await fetch(`${apiUrl}/updateCart`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -87,8 +94,48 @@ const Online = ({ user }) => {
         quantity: quantity
       }),
     });
+
+ 
+     
+      if (!res.ok) throw res;
+      const data = await res.json();
+  } catch (err) {
+      await handleResponseError(err);
+  }
+   
+
     fetchCart(userId); // טוען מחדש את העגלה לאחר עדכון
   };
+
+  const handleResponseError = async (err) => {
+
+
+    if (err instanceof Response) {
+        const errorData = await err.json();
+        switch (errorData.code) {
+            case "OUT_OF_STOCK":
+                setMessage("המוצר כבר לא קיים במלאי");
+                setTimeout(() => setMessage(""), 3000);
+                break;
+            case "DB_ERROR":
+              setMessage("שגיאת בסיס נתונים. אנא נסה שוב.");
+              setTimeout(() => setMessage(""), 3000);
+                break;
+            case "UNKNOWN_ERROR":
+                setMessage("שגיאה לא ידועה. אנא נסה שוב.");
+                setTimeout(() => setMessage(""), 3000);
+                break;
+            default:
+                setMessage("שגיאה בלתי צפויה.");
+                setTimeout(() => setMessage(""), 3000);
+                break;
+        }
+    } else {
+        console.error("Unexpected error:", err);
+        setMessage("שגיאה בלתי צפויה.");
+        setTimeout(() => setMessage(""), 3000);
+    }
+};
 
   // פונקציה לעדכון כמות מוצר בעגלה
   const updateCartItem = async (productId, newQuantity) => {
@@ -171,6 +218,12 @@ const Online = ({ user }) => {
           </motion.div>
         ))}
       </div>
+
+
+      <div className="shopping-page">
+      <MessagePopup message={message} />
+      {/* שאר התוכן */}
+    </div>
 
       <Box className="cart-section">
         <Typography variant="h5">סל הקניות</Typography>
