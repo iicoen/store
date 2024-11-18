@@ -4,6 +4,7 @@ import HomePage from './components/HomePage';
 import LoginPage from './components/LoginPage';
 import Online from './components/Online';
 import AdminPanel from './components/AdminPanel';
+import OrderPage from './components/OrderPage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/online" element={<Online />} />
         <Route path="/adminPanel" element={<AdminPanel />} />
+        <Route path="/orderPage" element={<OrderPage />} />
       </Routes>
     </Router>
   );

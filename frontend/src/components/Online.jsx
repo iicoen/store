@@ -172,7 +172,10 @@ const Online = ({ user }) => {
  
 
   // פונקציה לביצוע הזמנה
-  const handleOrderSubmit=()=>{};
+  const handleOrderSubmit=()=>{
+    navigate("/orderPage"); 
+
+  };
 
 
   return (
