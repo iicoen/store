@@ -1,24 +1,38 @@
-import React, { useState } from "react";
+import React, {useEffect, useState } from "react";
 import "../css/OrderPage.css";
 import apiUrl from '../config.js';
 
+import { useNavigate } from "react-router-dom";
+
 export default function OrderPage(
-    { cartItems, onOrderComplete }
+    // { cartItems, onOrderComplete }
+    {  onOrderComplete }
 ) {
-    const [paymentMethod, setPaymentMethod] = useState("saved");
+    const [paymentMethod, setPaymentMethod] = useState("paypal");
     const [isProcessing, setIsProcessing] = useState(false);
+    const navigate = useNavigate();
+    const token = localStorage.getItem("token");
+
+    useEffect(()=>{
+        if(!token){navigate("/login")}
+    });
 
     const handleOrder = async () => {
+    let cartItems="d";
         setIsProcessing(true);
         try {
             const response = await fetch(`${apiUrl}/api/checkout`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ cartItems, paymentMethod }),
+                headers: { "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}` },
+                body: JSON.stringify(
+                    { cartItems, paymentMethod }
+
+                ),
             });
             const result = await response.json();
             if (result.success) {
-                onOrderComplete();
+                // onOrderComplete();
                 alert("ההזמנה בוצעה בהצלחה!");
             } else {
                 alert("אירעה שגיאה: " + result.message);
