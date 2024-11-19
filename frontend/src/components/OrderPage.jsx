@@ -1,14 +1,17 @@
 import React, { useState } from "react";
 import "../css/OrderPage.css";
+import apiUrl from '../config.js';
 
-export default function OrderPage({ cartItems, onOrderComplete }) {
+export default function OrderPage(
+    { cartItems, onOrderComplete }
+) {
     const [paymentMethod, setPaymentMethod] = useState("saved");
     const [isProcessing, setIsProcessing] = useState(false);
 
     const handleOrder = async () => {
         setIsProcessing(true);
         try {
-            const response = await fetch("/api/checkout", {
+            const response = await fetch(`${apiUrl}/api/checkout`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ cartItems, paymentMethod }),

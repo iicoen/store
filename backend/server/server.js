@@ -4,6 +4,10 @@ const app = express();
 const port = 3001;
 const cors = require("cors");
 // לצורך פונקצית אימות
+
+const bodyParser = require("body-parser");
+const checkoutRouter = require("./routes/checkout"); // נתיב לקובץ שבו נמצא הקוד שלך
+
 const jwt = require("jsonwebtoken");
 const SECRET_KEY = "your_secret_key";
 // const bcrypt = require("bcryptjs");
@@ -24,6 +28,10 @@ const nodemailer = require("nodemailer");
 // מאשר לכל הדומיינים
 app.use(cors());
 app.use(express.json());
+
+
+app.use(bodyParser.json()); // תמיכה ב-JSON בבקשות
+app.use("/api", checkoutRouter); // חיבור הראוטר עם prefix של "/api"
 
 // חיבור למסד הנתונים
 const db = mysql.createConnection({
@@ -528,7 +536,7 @@ function sendInvoice(cartItems, email) {
   });
 }
 
-module.exports = router;
+// module.exports = router;
 
 
 
