@@ -171,10 +171,8 @@ app.post("/updateCart", (req, res) => {
         if (!(await db.promise().query('SELECT EXISTS(SELECT 1 FROM Products WHERE product_id = ?) AS `exists`', [product_id]))[0][0].exists)
 
         {
-         console.log(666666666666666666);
           
           return res.status(500).json({ valid: false, error: "The product is no longer in stock.", code: "OUT_OF_STOCK" })}
-          else console.log(777777777777777); 
     
       const upsertCartItemQuery = `INSERT INTO CartItems (customer_id, product_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity), updated_at = CURRENT_TIMESTAMP`;
       

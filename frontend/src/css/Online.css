@@ -1,46 +1,112 @@
+* {
+  box-sizing: border-box;
+}    
+
 .shopping-page {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-          }
-          
-          .page-title {
-            color: #333;
-            margin-bottom: 20px;
-          }
-          
-          .products-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            width: 100%;
-          }
-          
-          .product-card {
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-          }
-          
-          .cart-section {
-            margin-top: 30px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 300px;
-            text-align: center;
-          }
-          
-          .quantity-input {
-            margin-top: 10px;
-          }
-          
-          .view-orders-button {
-            margin-top: 15px;
-            align-self: flex-start;
-          }
-          
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.page-title {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.products-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  width: 100%;
+}
+
+.product-card {
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.quantity-input {
+  margin-top: 10px;
+}
+
+.view-orders-button {
+  margin-top: 15px;
+  align-self: flex-start;
+}
+
+.cart-section {
+  height: auto; /* התאמת גובה דינמית */
+  max-height: 80vh; /* הגבלת גובה הסל למסך */
+  overflow-y: auto; /* גלילה פנימית אם התוכן חורג */
+  position: sticky;
+  top: 20px; /* מרווח מהחלק העליון */
+  z-index: 10; /* עדיפות גבוהה בהיררכיה */
+  text-align: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.shopping-page-container {
+  position: relative; /* הבטחת הקשר למיקום הסל */
+}
+
+.categories-list button {
+  margin: 5px;
+  padding: 10px 20px;
+  border: 1px solid #007bff;
+  border-radius: 5px;
+  background-color: #f5f5f5;
+  color: #007bff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.categories-list button:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.shopping-page-container {
+  display: grid;
+  grid-template-columns: 1fr 300px; /* תוכן ראשי + סל */
+  gap: 20px; /* רווח בין העמודות */
+}
+
+
+
+.shopping-cart {
+  position: sticky; /* יישאר במקומו בזמן גלילה */
+  top: 20px; /* מרחק מהחלק העליון */
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.shopping-page-container {
+  display: grid;
+  grid-template-columns: 1fr 300px; /* תוכן ראשי + סל */
+  gap: 20px; /* רווח בין העמודות */
+}
+
+.main-content {
+  padding: 20px; /* רווח פנימי לתוכן */
+}
+
+.main-content {
+  margin-left: 10px; /* זז בהתאם לרוחב הסל */
+}
+
+.shopping-page-container {
+  display: grid;
+  grid-template-columns: 1fr 300px; /* עמודה ראשית + סל */
+  gap: 20px;
+}
+
+
