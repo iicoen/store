@@ -537,7 +537,17 @@ function sendInvoice(cartItems, email) {
 // module.exports = router;
 
 
+// נתיב לקריאת כל הלקוחות
+app.get('/api/customers', async (req, res) => {
+  try {
+    const [rows] = await db.promise().query('SELECT * FROM customers');
 
+    res.json(rows);
+  } catch (error) {
+    // console.error('Error fetching customers:', error);
+    res.status(500).json({ error: 'Failed to fetch customers' });
+  }
+});
 
 
 // הפעלת השרת

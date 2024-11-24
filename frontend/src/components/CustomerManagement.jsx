@@ -11,107 +11,100 @@ import {
   Modal,
   Box,
   Grid,
-  Tabs,
-  Tab,
-  Autocomplete,
 } from "@mui/material";
 
-
-const ProductManagement = () => {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    price: "",
-    description: "",
-    quantity: "",
-    category_id: "",
+const CustomerManagement = () => {
+  const [customers, setCustomers] = useState([]);
+  const [newCustomer, setNewCustomer] = useState({
+    first_name: "",
+    last_name: "",
+    identity_number: "",
+    address: "",
+    phone: "",
+    email: "",
+    shipping_address: "",
   });
-  const [editProduct, setEditProduct] = useState(null);
+  const [editCustomer, setEditCustomer] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [openAddModal, setOpenAddModal] = useState(false);
 
+  // מיפוי של תוויות לשדות בעברית
+  const fieldLabels = {
+    first_name: "שם פרטי",
+    last_name: "שם משפחה",
+    identity_number: "תעודת זהות",
+    address: "כתובת",
+    phone: "טלפון",
+    email: "אימייל",
+    shipping_address: "כתובת למשלוח",
+  };
+
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
+    fetchCustomers();
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchCustomers = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/api/products`);
-      setProducts(response.data);
+      const response = await axios.get(`${apiUrl}/api/customers`);
+      setCustomers(response.data);
     } catch (error) {
-      console.error("Error fetching products", error);
+      console.error("Error fetching customers", error);
     }
   };
 
-  const fetchCategories = async () => {
-    try {
-      const response = await axios.get(`${apiUrl}/api/categories`);
-      setCategories(response.data);
-    } catch (error) {
-      console.error("Error fetching categories", error);
-    }
-  };
-
-  const handleEditProduct = (product) => {
-    setEditProduct(product);
+  const handleEditCustomer = (customer) => {
+    setEditCustomer(customer);
     setOpenModal(true);
   };
 
-  const saveProduct = async () => {
+  const saveCustomer = async () => {
     try {
       await axios.put(
-        `${apiUrl}/api/products/${editProduct.product_id}`,
-        editProduct
+        `${apiUrl}/api/customers/${editCustomer.customer_id}`,
+        editCustomer
       );
-      fetchProducts();
+      fetchCustomers();
       setOpenModal(false);
     } catch (error) {
-      console.error("Error updating product", error);
+      console.error("Error updating customer", error);
     }
   };
 
-  const deleteProduct = async (productId) => {
+  const deleteCustomer = async (customerId) => {
     try {
-      await axios.delete(`${apiUrl}/api/products/${productId}`);
-      fetchProducts();
+      await axios.delete(`${apiUrl}/api/customers/${customerId}`);
+      fetchCustomers();
       setOpenModal(false);
     } catch (error) {
-      console.error("Error deleting product", error);
+      console.error("Error deleting customer", error);
     }
   };
 
-  const addProduct = async () => {
+  const addCustomer = async () => {
     try {
-      await axios.post(`${apiUrl}/api/products`, newProduct);
-      fetchProducts();
-      setNewProduct({
-        name: "",
-        price: "",
-        description: "",
-        quantity: "",
-        category_id: "",
+      await axios.post(`${apiUrl}/api/customers`, newCustomer);
+      fetchCustomers();
+      setNewCustomer({
+        first_name: "",
+        last_name: "",
+        identity_number: "",
+        address: "",
+        phone: "",
+        email: "",
+        shipping_address: "",
       });
       setOpenAddModal(false);
     } catch (error) {
-      console.error("Error adding product", error);
+      console.error("Error adding customer", error);
     }
   };
+  const hiddenFields = ["customer_id", "created_at", "updated_at"]; // שדות להסתרה
 
-  const filterProductsByCategory = (categoryId) => {
-    setSelectedCategory(categoryId);
-  };
-
-  const filteredProducts = selectedCategory
-    ? products.filter((product) => product.category_id === selectedCategory)
-    : products;
 
   return (
     <div style={{ padding: "10px", fontSize: "0.9rem" }}>
       <Typography variant="h5" gutterBottom>
-        ניהול מוצרים
+        ניהול לקוחות
       </Typography>
 
       <Button
@@ -120,38 +113,24 @@ const ProductManagement = () => {
         onClick={() => setOpenAddModal(true)}
         style={{ marginBottom: "20px" }}
       >
-        הוספת מוצר חדש
+        הוספת לקוח חדש
       </Button>
 
-      <Tabs
-        value={selectedCategory}
-        onChange={(e, newValue) => filterProductsByCategory(newValue)}
-        variant="scrollable"
-        scrollButtons="auto"
-      >
-        <Tab label="כל המוצרים" value="" />
-        {categories.map((category) => (
-          <Tab
-            key={category.category_id}
-            label={category.category_name}
-            value={category.category_id}
-          />
-        ))}
-      </Tabs>
-
       <Grid container spacing={2} style={{ marginTop: "20px" }}>
-        {filteredProducts.map((product) => (
-          <Grid item xs={12} sm={6} md={4} key={product.product_id}>
+        {customers.map((customer) => (
+          <Grid item xs={12} sm={6} md={4} key={customer.customer_id}>
             <Card>
-            {/* <Card style={{ width: "200px", height: "150px" }}> */}
               <CardContent>
-                <Typography variant="h6">{product.product_name}</Typography>
-                <Typography>מחיר: {product.price} ₪</Typography>
+                <Typography variant="h6">
+                  {customer.first_name} {customer.last_name}
+                </Typography>
+                <Typography>טלפון: {customer.phone}</Typography>
+                <Typography>אימייל: {customer.email}</Typography>
               </CardContent>
               <CardActions>
                 <Button
                   variant="outlined"
-                  onClick={() => handleEditProduct(product)}
+                  onClick={() => handleEditCustomer(customer)}
                 >
                   ערוך
                 </Button>
@@ -161,7 +140,7 @@ const ProductManagement = () => {
         ))}
       </Grid>
 
-      {/* חלון הוספת מוצר */}
+      {/* חלון הוספת לקוח */}
       <Modal open={openAddModal} onClose={() => setOpenAddModal(false)}>
         <Box
           style={{
@@ -173,85 +152,25 @@ const ProductManagement = () => {
             borderRadius: "8px",
           }}
         >
-          <Typography variant="h5">הוספת מוצר חדש</Typography>
-          <Grid container spacing={0.5}>
-            <Grid item xs={12}>
-              <TextField
-                label="שם מוצר"
-                fullWidth
-                value={newProduct.name}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, name: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="מחיר"
-                type="number"
-                fullWidth
-                value={newProduct.price}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, price: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="תיאור"
-                fullWidth
-                value={newProduct.description}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, description: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="כמות במלאי"
-                type="number"
-                fullWidth
-                value={newProduct.quantity}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, quantity: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid item xs={12}>
-              {/* <TextField
-                select
-                fullWidth
-                label="קטגוריה"
-                value={newProduct.category_id}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, category_id: e.target.value })
-                }
-              >
-                <option value="">בחר קטגוריה</option>
-                {categories.map((category) => (
-                  <option key={category.category_id} value={category.category_id}>
-                    {category.category_name}
-                  </option>
-                ))}
-              </TextField> */}
-
-              <Autocomplete
-  options={categories}
-  getOptionLabel={(option) => option.category_name}
-  onChange={(event, newValue) =>{
-    setNewProduct({ ...newProduct, category_id: newValue?.category_id || "" })
-  }
-  
-  }
-  renderInput={(params) => <TextField {...params} label="קטגוריה" fullWidth />}
-/>
-
-            </Grid>
+          <Typography variant="h5">הוספת לקוח חדש</Typography>
+          <Grid container spacing={2}>
+            {Object.keys(newCustomer).map((field) => (
+              <Grid item xs={12} key={field}>
+                <TextField
+                  label={fieldLabels[field] || field.replace("_", " ")}
+                  fullWidth
+                  value={newCustomer[field]}
+                  onChange={(e) =>
+                    setNewCustomer({ ...newCustomer, [field]: e.target.value })
+                  }
+                />
+              </Grid>
+            ))}
           </Grid>
           <Button
             variant="contained"
             color="primary"
-            onClick={addProduct}
+            onClick={addCustomer}
             style={{ marginTop: "20px" }}
           >
             שמור
@@ -259,72 +178,62 @@ const ProductManagement = () => {
         </Box>
       </Modal>
 
-      {/* חלון עריכה */}
-      <Modal open={openModal} onClose={() => setOpenModal(false)}>
-        <Box
-          style={{
-            background: "white",
-            padding: "20px",
-            margin: "auto",
-            marginTop: "10%",
-            width: "40%",
-            borderRadius: "8px",
-          }}
-        >
-          <Typography variant="h5">עריכת מוצר</Typography>
-          {editProduct && (
-            <>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    label="שם מוצר"
-                    fullWidth
-                    value={editProduct.product_name}
-                    onChange={(e) =>
-                      setEditProduct({
-                        ...editProduct,
-                        product_name: e.target.value,
-                      })
-                    }
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="מחיר"
-                    type="number"
-                    fullWidth
-                    value={editProduct.price}
-                    onChange={(e) =>
-                      setEditProduct({
-                        ...editProduct,
-                        price: e.target.value,
-                      })
-                    }
-                  />
-                </Grid>
+      {/* חלון עריכת לקוח */}
+<Modal open={openModal} onClose={() => setOpenModal(false)}>
+  <Box
+    style={{
+      background: "white",
+      padding: "20px",
+      margin: "auto",
+      marginTop: "10%",
+      width: "40%",
+      borderRadius: "8px",
+    }}
+  >
+    <Typography variant="h5">עריכת לקוח</Typography>
+    {editCustomer && (
+      <>
+        <Grid container spacing={2}>
+          {Object.keys(editCustomer)
+            .filter((field) => !hiddenFields.includes(field)) // הסרת שדות מוסתרים
+            .map((field) => (
+              <Grid item xs={12} key={field}>
+                <TextField
+                  label={fieldLabels[field] || field.replace("_", " ")}
+                  fullWidth
+                  value={editCustomer[field]}
+                  onChange={(e) =>
+                    setEditCustomer({
+                      ...editCustomer,
+                      [field]: e.target.value,
+                    })
+                  }
+                />
               </Grid>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={saveProduct}
-                style={{ marginTop: "20px" }}
-              >
-                שמור
-              </Button>
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={() => deleteProduct(editProduct.product_id)}
-                style={{ marginTop: "10px", marginLeft: "10px" }}
-              >
-                מחק
-              </Button>
-            </>
-          )}
-        </Box>
-      </Modal>
+            ))}
+        </Grid>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={saveCustomer}
+          style={{ marginTop: "20px" }}
+        >
+          שמור
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={() => deleteCustomer(editCustomer.customer_id)}
+          style={{ marginTop: "10px", marginLeft: "10px" }}
+        >
+          מחק
+        </Button>
+      </>
+    )}
+  </Box>
+</Modal>
     </div>
   );
 };
 
-export default ProductManagement;
+export default CustomerManagement;
