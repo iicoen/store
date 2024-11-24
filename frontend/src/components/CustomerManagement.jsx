@@ -174,7 +174,7 @@ const ProductManagement = () => {
           }}
         >
           <Typography variant="h5">הוספת מוצר חדש</Typography>
-          <Grid container spacing={2}>
+          <Grid container spacing={0.5}>
             <Grid item xs={12}>
               <TextField
                 label="שם מוצר"
