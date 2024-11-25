@@ -39,18 +39,32 @@ const CustomerManagement = () => {
     shipping_address: "כתובת למשלוח",
   };
 
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
 
-  const fetchCustomers = async () => {
+  const fetchCustomerData = async () => {
+    const token = localStorage.getItem("adminToken");
+  
     try {
-      const response = await axios.get(`${apiUrl}/api/customers`);
+      const response = await axios.get(`${apiUrl}/api/admin/customers`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // console.log("Protected data:", response.data);
       setCustomers(response.data);
+
     } catch (error) {
-      console.error("Error fetching customers", error);
+      console.error("Access denied:", error.response?.data);
     }
   };
+  
+  
+
+  useEffect(() => {
+    // fetchCustomers - אולי לשנות שם
+
+    fetchCustomerData();
+
+  }, []);
+
+
 
   const handleEditCustomer = (customer) => {
     setEditCustomer(customer);
@@ -58,12 +72,15 @@ const CustomerManagement = () => {
   };
 
   const saveCustomer = async () => {
+    const token = localStorage.getItem("adminToken");
     try {
       await axios.put(
-        `${apiUrl}/api/customers/${editCustomer.customer_id}`,
-        editCustomer
+        `${apiUrl}/api/admin/customers/${editCustomer.customer_id}`,
+        editCustomer , {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
-      fetchCustomers();
+      fetchCustomerData();
       setOpenModal(false);
     } catch (error) {
       console.error("Error updating customer", error);
@@ -71,9 +88,11 @@ const CustomerManagement = () => {
   };
 
   const deleteCustomer = async (customerId) => {
+    const token = localStorage.getItem("adminToken");
     try {
-      await axios.delete(`${apiUrl}/api/customers/${customerId}`);
-      fetchCustomers();
+      await axios.delete(`${apiUrl}/api/admin/customers/${customerId}`, 
+        {headers: { Authorization: `Bearer ${token}`}});
+      fetchCustomerData();
       setOpenModal(false);
     } catch (error) {
       console.error("Error deleting customer", error);
@@ -81,9 +100,12 @@ const CustomerManagement = () => {
   };
 
   const addCustomer = async () => {
+    const token = localStorage.getItem("adminToken");
     try {
-      await axios.post(`${apiUrl}/api/customers`, newCustomer);
-      fetchCustomers();
+      await axios.post(`${apiUrl}/api/admin/customers`, newCustomer,
+        {headers: {Authorization: `Bearer ${token}`}}
+      );
+      fetchCustomerData();
       setNewCustomer({
         first_name: "",
         last_name: "",

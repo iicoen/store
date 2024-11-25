@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
+
 import { TextField, Button, Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import "../css/LoginPage.css";
@@ -9,6 +11,26 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   const toggleForm = () => setIsLogin((prev) => !prev);
+
+
+
+
+
+  const loginAdmin = async () => {
+  // const loginAdmin = async (username, password) => {
+    try {
+      // const response = await axios.post(`${apiUrl}/api/admin/login`, { username, password });
+      const response = await axios.post(`${apiUrl}/api/admin/login`);
+      const token = response.data.token;
+      localStorage.setItem("adminToken", token); // שמירת הטוקן ב-Local Storage
+      // console.log("Logged in successfully:", token);
+      navigate("/adminPanel")
+
+    } catch (error) {
+      console.error("Login failed:", error.response?.data);
+    }
+  };
+
 
   return (
     <Box className="login-page-container">
@@ -36,7 +58,7 @@ const LoginPage = () => {
         transition={{ type: "spring", stiffness: 50 }}
         className="admin-button-container"
       >
-        <Button variant="contained" color="secondary"  onClick={()=>{navigate("/adminPanel")}}>
+        <Button variant="contained" color="secondary"  onClick={loginAdmin}>
           כניסת מנהלים
         </Button>
       </motion.div>

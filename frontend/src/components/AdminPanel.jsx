@@ -5,10 +5,32 @@ import OrderManagement from "./OrderManagement";
 import Reports from "./Reports";
 import CategoryManagement from "./CategoryManagement";
 import { Box, Button, ButtonGroup, Paper, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import apiUrl from '../config.js';
+import axios from "axios";
 
 const AdminPanel = () => {
   const [selectedSection, setSelectedSection] = useState("products");
+  const navigate = useNavigate();
 
+
+
+  const logoutAdmin = async () => {
+    const token = localStorage.getItem("adminToken");
+    navigate("/login");
+
+    try {
+      await axios.post(
+        `${apiUrl}/api/admin/logout`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      localStorage.removeItem("adminToken"); // מחיקת הטוקן מקומית
+      console.log("Logged out successfully");
+    } catch (error) {
+      console.error("Logout failed:", error.response?.data);
+    }
+  };
   const renderSection = () => {
     switch (selectedSection) {
       case "products":
@@ -27,6 +49,7 @@ const AdminPanel = () => {
   };
 
   return (
+  
     <Box
       sx={{
         minHeight: "100vh",
@@ -38,7 +61,6 @@ const AdminPanel = () => {
       <Typography
         variant="h4"
         align="center"
-        gutterBottom
         sx={{
           color: "#333",
           fontWeight: "bold",
@@ -47,6 +69,32 @@ const AdminPanel = () => {
       >
         ברוכים הבאים לממשק מנהל
       </Typography>
+
+      {/* כפתור יציאה */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          marginBottom: "20px", // מרווח אחרי הכפתור
+        }}
+      >
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: "#ff5722", // כתום מותאם אישית
+            color: "#fff", // צבע הטקסט
+            "&:hover": {
+              backgroundColor: "#e64a19", // צבע בעת ריחוף
+            },
+            fontWeight: "bold",
+            padding: "10px 20px",
+            fontSize: "16px",
+          }}
+          onClick={logoutAdmin}
+        >
+          יציאה
+        </Button>
+      </Box>
 
       {/* תפריט ניווט */}
       <Box

@@ -7,6 +7,7 @@ const cors = require("cors");
 
 const bodyParser = require("body-parser");
 const checkoutRouter = require("./routes/checkout"); // נתיב לקובץ שבו נמצא הקוד שלך
+const managementRouter = require("./routes/management"); // נתיב לקובץ שבו נמצא הקוד שלך
 
 const jwt = require("jsonwebtoken");
 const SECRET_KEY = "your_secret_key";
@@ -17,7 +18,6 @@ const { log } = require("console");
 require('dotenv').config({ path: path.join(__dirname, 'process.env') });
 
 // require('dotenv').config();
-// console.log('dotenv loaded:', process.env.DB_HOST !== undefined);
 
 // לצורך תשלומים
 const router = express.Router();
@@ -31,26 +31,17 @@ app.use(express.json());
 
 
 app.use(bodyParser.json()); // תמיכה ב-JSON בבקשות
-app.use("/api", checkoutRouter); // חיבור הראוטר עם prefix של "/api"
+app.use("/api", checkoutRouter); 
+app.use("/api/admin", managementRouter); 
 
 // חיבור למסד הנתונים
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
+
+const db = require('./config/database');
 
 
-// const db = mysql.createPool({
-//   host: process.env.DB_HOST,
-//   user: process.env.DB_USER,
-//   password: process.env.DB_PASSWORD,
-//   database: process.env.DB_NAME,
-//   waitForConnections: true,
-//   connectionLimit: 10,
-//   queueLimit: 0,
-// });
+
+
+
 
 
 
@@ -537,17 +528,6 @@ function sendInvoice(cartItems, email) {
 // module.exports = router;
 
 
-// נתיב לקריאת כל הלקוחות
-app.get('/api/customers', async (req, res) => {
-  try {
-    const [rows] = await db.promise().query('SELECT * FROM customers');
-
-    res.json(rows);
-  } catch (error) {
-    // console.error('Error fetching customers:', error);
-    res.status(500).json({ error: 'Failed to fetch customers' });
-  }
-});
 
 
 // הפעלת השרת
