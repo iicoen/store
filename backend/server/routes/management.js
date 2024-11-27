@@ -12,7 +12,6 @@ const { log } = require("console");
 require('dotenv').config({ path: path.join(__dirname, '../process.env') });
 
 const SECRET_KEY = process.env.SECRET_KEY;
-console.log(SECRET_KEY);
 
 // const adminTokens = new Set(); // לשמירת הטוקנים של מנהלים מחוברים
 
@@ -116,10 +115,14 @@ router.put('/customers/:id', authenticateAdmin, async (req, res) => {
 // מחיקת לקוח
 router.delete('/customers/:id', authenticateAdmin, async (req, res) => {
   const customerId = req.params.id;
+  
   try {
     await db.promise().query('DELETE FROM Customers WHERE customer_id = ?', [customerId]);
+    
     res.json({ message: 'Customer deleted successfully' });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({ message: 'Error deleting customer', error });
   }
 });

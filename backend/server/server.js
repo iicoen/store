@@ -10,7 +10,7 @@ const checkoutRouter = require("./routes/checkout"); // נתיב לקובץ שב
 const managementRouter = require("./routes/management"); // נתיב לקובץ שבו נמצא הקוד שלך
 
 const jwt = require("jsonwebtoken");
-const SECRET_KEY = "your_secret_key";
+const SECRET_KEY = process.env.SECRET_KEY;
 // const bcrypt = require("bcryptjs");
 const bcrypt = require("bcrypt");
 const path = require('path');
@@ -38,18 +38,6 @@ app.use("/api/admin", managementRouter);
 
 const db = require('./config/database');
 
-
-
-
-
-
-
-
-
-db.connect((err) => {
-  if (err) throw err;
-  console.log("Connected to database");
-});
 
 // פונקציית אימות
 function authenticateToken(req, res, next) {
@@ -282,14 +270,16 @@ app.post("/register", async (req, res) => {
         return res.status(500).json({ error: "Database error" });
       }
 
-      if (results.length > 0) {
         // המשתמש כבר קיים
+      if (results.length > 0) {
         return res.status(400).json({ message: "User already exists" });
-      } // הצפנת הסיסמה
+      }
 
+       // הצפנת הסיסמה
       const saltRounds = 10; // מספר הסבבים בהצפנה
-      const passwordHash = await bcrypt.hash(password, saltRounds); // הוספת המשתמש לטבלת הלקוחות
+      const passwordHash = await bcrypt.hash(password, saltRounds);
 
+       // הוספת המשתמש לטבלת הלקוחות
       const insertCustomerQuery = `INSERT INTO customers (first_name, last_name, identity_number, address, phone, email, shipping_address) VALUES (?, ?, ?, ?, ?, ?, ?)`;
       db.query(
         insertCustomerQuery,
@@ -305,10 +295,11 @@ app.post("/register", async (req, res) => {
         (err, customerResult) => {
           if (err) {
             return res.status(500).json({ error: "Database error" });
-          } // הוספת המשתמש לטבלת המשתמשים עם הסיסמה המוצפנת
+          }
 
-          const insertUserQuery = `INSERT INTO users (identity_number, password_hash) VALUES (?, ?)`;
-          db.query(insertUserQuery, [identity_number, passwordHash], (err) => {
+           // הוספת המשתמש לטבלת המשתמשים עם הסיסמה המוצפנת
+          const insertUserQuery = `INSERT INTO users (customer_id, identity_number, password_hash) VALUES (?, ?, ?)`;
+          db.query(insertUserQuery, [customerResult.insertId, identity_number, passwordHash], (err) => {
             if (err) {
               return res.status(500).json({ error: "Database error" });
             }
@@ -322,7 +313,6 @@ app.post("/register", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
 
 
 // ממשק ניהול
