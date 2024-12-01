@@ -30,6 +30,9 @@ const LoginPage = () => {
       console.error("Login failed:", error.response?.data);
     }
   };
+  const forgotPassword=()=>{
+    navigate("/forgotPassword")
+  }
 
 
   return (
@@ -50,6 +53,9 @@ const LoginPage = () => {
         )}
         <Button onClick={toggleForm} color="primary" variant="text">
           {isLogin ? "אין לך חשבון? הרשם כאן" : "כבר יש לך חשבון? התחבר"}
+        </Button>
+        <Button onClick={forgotPassword} color="error" variant="text">
+          שכחתי סיסמה
         </Button>
       </motion.div>
       <motion.div

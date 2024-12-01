@@ -5,6 +5,8 @@ import LoginPage from './components/LoginPage';
 import Online from './components/Online';
 import AdminPanel from './components/AdminPanel';
 import OrderPage from './components/OrderPage';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 
 function App() {
   return (
@@ -15,6 +17,10 @@ function App() {
         <Route path="/online" element={<Online />} />
         <Route path="/adminPanel" element={<AdminPanel />} />
         <Route path="/orderPage" element={<OrderPage />} />
+        <Route path="/forgotPassword" element={<ForgotPassword />} />
+        {/* <Route path="/reset-password" element={<ResetPassword />} /> */}
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+
       </Routes>
     </Router>
   );

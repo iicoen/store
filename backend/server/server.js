@@ -8,6 +8,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const checkoutRouter = require("./routes/checkout"); // נתיב לקובץ שבו נמצא הקוד שלך
 const managementRouter = require("./routes/management"); // נתיב לקובץ שבו נמצא הקוד שלך
+const forgot_password = require("./routes/forgot_password"); // נתיב לקובץ שבו נמצא הקוד שלך
 
 const jwt = require("jsonwebtoken");
 const SECRET_KEY = process.env.SECRET_KEY;
@@ -33,6 +34,9 @@ app.use(express.json());
 app.use(bodyParser.json()); // תמיכה ב-JSON בבקשות
 app.use("/api", checkoutRouter); 
 app.use("/api/admin", managementRouter); 
+app.use("/api/forgot-password", forgot_password); 
+app.use("/api/reset-password", require("./routes/resetPassword"));
+
 
 // חיבור למסד הנתונים
 
