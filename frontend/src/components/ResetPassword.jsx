@@ -21,8 +21,8 @@ const ResetPassword = () => {
       const response = await axios.post(`${apiUrl}/api/reset-password/${token}`, {
         password,
       });
-
-      setMessage(response.data.message);
+if(response.data.message===`Password updated successfully`){setMessage(`הסיסמה עודכנה בהצלחה`)}
+else{setMessage(response.data.message);}
     } catch (error) {
       setMessage("שגיאה במהלך איפוס הסיסמה");
     }
