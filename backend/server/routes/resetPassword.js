@@ -1,6 +1,6 @@
 const express = require("express");
 const nodemailer = require("nodemailer");
-const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 
 const db = require('../config/database');
 
@@ -11,14 +11,16 @@ const router = express.Router();
 router.post("/:token", async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
-  console.log(password);
   
   try {
     const resetEntry = await db.promise().query("SELECT * FROM PasswordResets WHERE token = ?", [token]);
     if (resetEntry[0].length === 0) return res.status(400).json({ message: "Invalid or expired token" });
     const email = resetEntry[0][0].email;
 
-    const hashedPassword = crypto.createHash("sha256").update(password).digest("hex");
+
+       // הצפנת הסיסמה
+       const saltRounds = 10; // מספר הסבבים בהצפנה
+       const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const [rows] = await db.promise().query("SELECT identity_number FROM customers WHERE email = ?", [email]);
     if (rows.length === 0) {
