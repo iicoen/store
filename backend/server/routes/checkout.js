@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const paypal = require("@paypal/checkout-server-sdk");
 const nodemailer = require("nodemailer");
+const { authenticateToken } = require("../middlewares/auth");
 
 // PayPal configuration
 const payPalClient = new paypal.core.PayPalHttpClient(
@@ -12,7 +13,7 @@ const payPalClient = new paypal.core.PayPalHttpClient(
 
 
 // Route: Handle Checkout
-router.post("/checkout", async (req, res) => {
+router.post("/checkout", authenticateToken, async (req, res) => {
   const { cartItems, paymentMethod } = req.body;
 
   try {
@@ -36,8 +37,8 @@ router.post("/checkout", async (req, res) => {
       const order = await payPalClient.execute(request);
       return res.json({ success: true, orderId: order.result.id });
     } else {
-      // Handle other payment methods
-      sendInvoice(cartItems, "customer@example.com"); // Replace with dynamic email
+      // לטפל באמצעי תשלום אחרים
+      sendInvoice(cartItems, "customer@example.com"); // החלף בדואר אלקטרוני דינמי
       res.json({ success: true, message: "הזמנה בוצעה בהצלחה!" });
     }
   } catch (error) {

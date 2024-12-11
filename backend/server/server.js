@@ -9,14 +9,16 @@ const bodyParser = require("body-parser");
 const checkoutRouter = require("./routes/checkout"); // נתיב לקובץ שבו נמצא הקוד שלך
 const managementRouter = require("./routes/management"); // נתיב לקובץ שבו נמצא הקוד שלך
 const forgot_password = require("./routes/forgot_password"); // נתיב לקובץ שבו נמצא הקוד שלך
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, 'process.env') });
+// require('dotenv').config();
 
 const jwt = require("jsonwebtoken");
 const SECRET_KEY = process.env.SECRET_KEY;
 // const bcrypt = require("bcryptjs");
 const bcrypt = require("bcrypt");
-const path = require('path');
 const { log } = require("console");
-require('dotenv').config({ path: path.join(__dirname, 'process.env') });
+
 
 // require('dotenv').config();
 
@@ -42,18 +44,8 @@ app.use("/api/reset-password", require("./routes/resetPassword"));
 
 const db = require('./config/database');
 
+const { authenticateToken } = require("./middlewares/auth");
 
-// פונקציית אימות
-function authenticateToken(req, res, next) {
-  const token = req.headers["authorization"]?.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "Unauthorized" });
-
-  jwt.verify(token, SECRET_KEY, (err, user) => {
-    if (err) return res.status(403).json({ message: "Forbidden" });
-    req.user = user; // מזהה את המשתמש על בסיס ה-JWT
-    next();
-  });
-}
 
 // דוגמה לשימוש במסלול שמוגן
 app.get("/user-orders", authenticateToken, (req, res) => {
@@ -386,31 +378,54 @@ app.post('/api/categories', async (req, res) => {
 
 
 // עדכון כמות בתוך העגלה
-app.put(`/api/updateCartItem`, (req, res)=>{
-  const token = req.headers["authorization"]?.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ valid: false });
-  }
-  jwt.verify(token, SECRET_KEY, async (err, user) => {
-    if (err) return res.status(403).json({ valid: false });
+// app.put(`/api/updateCartItem`, (req, res)=>{
+//   const token = req.headers["authorization"]?.split(" ")[1];
+//   if (!token) {
+//     return res.status(401).json({ valid: false });
+//   }
+//   jwt.verify(token, SECRET_KEY, async (err, user) => {
+//     if (err) return res.status(403).json({ valid: false });
 
-    try {
-      const userId = user.userId;
-      const { product_id, quantity } = req.body; 
-      const query = `UPDATE CartItems SET quantity = ? WHERE customer_id = ? AND product_id = ?`;      
-      db.query(query, [quantity, userId, product_id], (error, results) => {
-        if (error) {
-          console.error("Query Error:", error);
-          return res.status(500).json({ valid: false, error: "Database error" });
-        }
-        res.status(200).json({ valid: true });
-      });
-    } catch (queryError) {
-      console.error("Query Error:", queryError);
-      res.status(500).json({ valid: false, error: "Internal server error" });
-    }
-  });
+//     try {
+//       const userId = user.userId;
+//       const { product_id, quantity } = req.body; 
+//       const query = `UPDATE CartItems SET quantity = ? WHERE customer_id = ? AND product_id = ?`;      
+//       db.query(query, [quantity, userId, product_id], (error, results) => {
+//         if (error) {
+//           console.error("Query Error:", error);
+//           return res.status(500).json({ valid: false, error: "Database error" });
+//         }
+//         res.status(200).json({ valid: true });
+//       });
+//     } catch (queryError) {
+//       console.error("Query Error:", queryError);
+//       res.status(500).json({ valid: false, error: "Internal server error" });
+//     }
+//   });
+// });
+
+// עדכון כמות בתוך העגלה
+app.put(`/api/updateCartItem`, authenticateToken, (req, res) => {
+  try {
+    const userId = req.user.userId; // השתמש ב-req.user
+    const { product_id, quantity } = req.body;
+    const query = `UPDATE CartItems SET quantity = ? WHERE customer_id = ? AND product_id = ?`;
+    db.query(query, [quantity, userId, product_id], (error, results) => {
+      if (error) {
+        console.error("Query Error:", error);
+        return res.status(500).json({ valid: false, error: "Database error" });
+      }
+      res.status(200).json({ valid: true });
+    });
+  } catch (queryError) {
+    console.error("Query Error:", queryError);
+    res.status(500).json({ valid: false, error: "Internal server error" });
+  }
 });
+
+
+
+
 // מחיקת מוצר מתוך העגלה
 app.delete(`/api/removeCartItem`, (req, res)=>{
   const token = req.headers["authorization"]?.split(" ")[1];
