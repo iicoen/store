@@ -5,7 +5,9 @@ import axios from "axios";
 import { TextField, Button, Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import "../css/LoginPage.css";
-import apiUrl from '../config.js';
+// import apiUrl from '../config.js';
+
+const apiUrl=process.env.REACT_APP_API_URL;
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
