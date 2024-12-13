@@ -5,7 +5,7 @@ import apiUrl from '../config.js';
 import { useNavigate } from "react-router-dom";
 
 export default function OrderPage(
-    // { cartItems, onOrderComplete }
+    // {cartItems, onOrderComplete}
     {  onOrderComplete }
 ) {
     const [paymentMethod, setPaymentMethod] = useState("paypal");

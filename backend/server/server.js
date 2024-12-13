@@ -6,9 +6,7 @@ const cors = require("cors");
 // לצורך פונקצית אימות
 
 const bodyParser = require("body-parser");
-const checkoutRouter = require("./routes/checkout"); // נתיב לקובץ שבו נמצא הקוד שלך
-const managementRouter = require("./routes/management"); // נתיב לקובץ שבו נמצא הקוד שלך
-const forgot_password = require("./routes/forgot_password"); // נתיב לקובץ שבו נמצא הקוד שלך
+
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, 'process.env') });
 // require('dotenv').config();
@@ -18,7 +16,6 @@ const SECRET_KEY = process.env.SECRET_KEY;
 // const bcrypt = require("bcryptjs");
 const bcrypt = require("bcrypt");
 const { log } = require("console");
-
 
 // require('dotenv').config();
 
@@ -34,6 +31,11 @@ app.use(express.json());
 
 
 app.use(bodyParser.json()); // תמיכה ב-JSON בבקשות
+
+const checkoutRouter = require("./routes/checkout"); 
+const managementRouter = require("./routes/management");
+const forgot_password = require("./routes/forgot_password"); 
+
 app.use("/api", checkoutRouter); 
 app.use("/api/admin", managementRouter); 
 app.use("/api/forgot-password", forgot_password); 
@@ -46,56 +48,18 @@ const db = require('./config/database');
 
 const { authenticateToken } = require("./middlewares/auth");
 
-
-// דוגמה לשימוש במסלול שמוגן
-app.get("/user-orders", authenticateToken, (req, res) => {
-  const userId = req.user.id; // מזהה המשתמש מה-JWT // ביצוע שאילתה על בסיס userId וכו'
-});
-
-// app.post("/verify-token", (req, res) => {
-//   const token = req.headers["authorization"]?.split(" ")[1];
-//   // const token = req.headers["authorization"];
-//   if (!token) return res.status(401).json({ valid: false });
-//   jwt.verify(token, SECRET_KEY, (err, user) => {
-//     if (err) return res.status(403).json({ valid: false });
-//     let fullName="";
-//     const fullNameQuery = `SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM customers WHERE identity_number = ?;`;
-// console.log(`1 ${fullName}`);
-//   db.query(fullNameQuery, [user.identity], async (err, results) => {
-//      fullName=results[0];
-//      console.log(`2 ${fullName}`);
-//     // אולי ככה
-//     //  fullName=results[0];
-//   });
-//   console.log(`3 ${fullName}`);
-
-//     res.status(200).json({ valid: true, userId: fullName });
-//     // res.status(200).json({ valid: true, userId: user.userId });
-//   });
-// });
-
-app.post("/verify-token", (req, res) => {
-  const token = req.headers["authorization"]?.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ valid: false });
-  }
-
-  jwt.verify(token, SECRET_KEY, async (err, user) => {
-    if (err) return res.status(403).json({ valid: false });
+app.post("/verify-token", authenticateToken, async (req, res) => {
 
     try {
-      
-      
+      // שים לב שהתהליך הזה מיותר אחרי ששידרגתי את הטוקן אפשר לשלוף את זה בצד שרת מהטוקן
       const fullNameQuery = `SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM customers WHERE identity_number = ?;`;
-      const [results] = await db.promise().query(fullNameQuery, [user.identity]); // מחכים לתוצאה של השאילתא
-
+      const [results] = await db.promise().query(fullNameQuery, [req.user.identity]); // מחכים לתוצאה של השאילתא
       const fullName = results.length > 0 ? results[0].full_name : null; // מחלצים את השם המלא // מדפיסים את השם המלא // 
-      res.status(200).json({ valid: true, userId: fullName }); // מחזירים את השם המלא
+      res.status(200).json({ valid: true, userName: fullName }); // מחזירים את השם המלא
     } catch (queryError) {
       console.error("Query Error:", queryError);
       res.status(500).json({ valid: false, error: "Database query failed" });
     }
-  });
 });
 
 
@@ -219,22 +183,21 @@ app.post("/login", async (req, res) => {
 
      
            // שאילתת שאיבה של userId מטבלת customers לפי מספר הזהות
-           const customerQuery = "SELECT customer_id FROM customers WHERE identity_number = ?";
+           const customerQuery = "SELECT * FROM customers WHERE identity_number = ?";
            db.query(customerQuery, [identity_number], (err, customerResults) => {
              if (err) return res.status(500).json({ error: "שגיאת מסד נתונים" });
              if (customerResults.length === 0) {
                return res.status(400).json({ message: "הלקוח לא נמצא" });
              }
-     
-             const userId = customerResults[0].customer_id;
-
-
-      // יצירת טוקן
-      const token = jwt.sign(
-        { userId: userId, identity: user.identity_number },
-        SECRET_KEY,
-        { expiresIn: "1h" }
-      ); // החזרת הטוקן ללקוח
+             const customerData = {
+              userId: customerResults[0].customer_id,
+              identity: customerResults[0].identity_number,
+              email: customerResults[0].email,
+              full_name: `${customerResults[0].first_name} ${customerResults[0].last_name}`
+            };
+            
+    // יצירת טוקן
+      const token = jwt.sign(customerData, SECRET_KEY,{expiresIn:"1h"});
 
       res.status(200).json({ message: "התחברות הצליחה", token });
     });
@@ -378,36 +341,9 @@ app.post('/api/categories', async (req, res) => {
 
 
 // עדכון כמות בתוך העגלה
-// app.put(`/api/updateCartItem`, (req, res)=>{
-//   const token = req.headers["authorization"]?.split(" ")[1];
-//   if (!token) {
-//     return res.status(401).json({ valid: false });
-//   }
-//   jwt.verify(token, SECRET_KEY, async (err, user) => {
-//     if (err) return res.status(403).json({ valid: false });
-
-//     try {
-//       const userId = user.userId;
-//       const { product_id, quantity } = req.body; 
-//       const query = `UPDATE CartItems SET quantity = ? WHERE customer_id = ? AND product_id = ?`;      
-//       db.query(query, [quantity, userId, product_id], (error, results) => {
-//         if (error) {
-//           console.error("Query Error:", error);
-//           return res.status(500).json({ valid: false, error: "Database error" });
-//         }
-//         res.status(200).json({ valid: true });
-//       });
-//     } catch (queryError) {
-//       console.error("Query Error:", queryError);
-//       res.status(500).json({ valid: false, error: "Internal server error" });
-//     }
-//   });
-// });
-
-// עדכון כמות בתוך העגלה
 app.put(`/api/updateCartItem`, authenticateToken, (req, res) => {
   try {
-    const userId = req.user.userId; // השתמש ב-req.user
+    const userId = req.user.userId; 
     const { product_id, quantity } = req.body;
     const query = `UPDATE CartItems SET quantity = ? WHERE customer_id = ? AND product_id = ?`;
     db.query(query, [quantity, userId, product_id], (error, results) => {
@@ -427,16 +363,9 @@ app.put(`/api/updateCartItem`, authenticateToken, (req, res) => {
 
 
 // מחיקת מוצר מתוך העגלה
-app.delete(`/api/removeCartItem`, (req, res)=>{
-  const token = req.headers["authorization"]?.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ valid: false });
-  }
-  jwt.verify(token, SECRET_KEY, async (err, user) => {
-    if (err) return res.status(403).json({ valid: false });
-
+app.delete(`/api/removeCartItem`, authenticateToken, (req, res)=>{
     try {
-      const userId = user.userId;
+      const userId = req.user.userId;
       const productId = req.query.productId;
       const query = `DELETE FROM CartItems WHERE customer_id = ? AND product_id = ?`;
      
@@ -451,7 +380,6 @@ app.delete(`/api/removeCartItem`, (req, res)=>{
       console.error("Query Error:", queryError);
       res.status(500).json({ valid: false, error: "Internal server error" });
     }
-  });
 });
 
 

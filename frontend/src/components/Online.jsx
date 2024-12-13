@@ -20,7 +20,7 @@ const Online = ({ user }) => {
   const [fuulProducts, setFuulProducts] = useState([]);
   const [quantities, setQuantities] = useState({});
   const navigate = useNavigate();
-  const [userId, setUserId] = useState(null);
+  const [userName, setUserName] = useState(null);
   const [message, setMessage] = useState("");
   const token = localStorage.getItem("token");
   const [showCart, setShowCart] = useState(false);
@@ -37,9 +37,11 @@ const Online = ({ user }) => {
         .then((res) => res.json())
         .then((data) => {
           if (data.valid) {
-            setUserId(data.userId);
-            fetchCart(data.userId); // טוען את העגלה מהשרת
+            setUserName(data.userName);
+            fetchCart(); // טוען את העגלה מהשרת
           } else {
+            console.log(22222);
+            
             navigate("/login");
           }
         })
@@ -129,7 +131,7 @@ const Online = ({ user }) => {
       await handleResponseError(err);
     }
 
-    fetchCart(userId); // טוען מחדש את העגלה לאחר עדכון
+    fetchCart(); // טוען מחדש את העגלה לאחר עדכון
   };
 
   const handleResponseError = async (err) => {
@@ -173,7 +175,7 @@ const Online = ({ user }) => {
         quantity: newQuantity,
       }),
     });
-    fetchCart(userId);
+    fetchCart();
   };
 
   // פונקציה למחיקת מוצר מהעגלה
@@ -184,7 +186,7 @@ const Online = ({ user }) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    fetchCart(userId);
+    fetchCart();
   };
 
   const calculateTotal = () => {
@@ -211,7 +213,7 @@ const Online = ({ user }) => {
         ברוכים הבאים לחנות שלנו!
       </Typography>
       <div>
-        <h2>ברוך הבא, {userId}</h2>
+        <h2>ברוך הבא, {userName}</h2>
       </div>
       <Button
         variant="contained"
