@@ -48,166 +48,6 @@ const db = require('./config/database');
 
 const { authenticateToken } = require("./middlewares/auth");
 
-app.post("/verify-token", authenticateToken, async (req, res) => {
-
-    try {
-      // שים לב שהתהליך הזה מיותר אחרי ששידרגתי את הטוקן אפשר לשלוף את זה בצד שרת מהטוקן
-      const fullNameQuery = `SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM customers WHERE identity_number = ?;`;
-      const [results] = await db.promise().query(fullNameQuery, [req.user.identity]); // מחכים לתוצאה של השאילתא
-      const fullName = results.length > 0 ? results[0].full_name : null; // מחלצים את השם המלא // מדפיסים את השם המלא // 
-      res.status(200).json({ valid: true, userName: fullName }); // מחזירים את השם המלא
-    } catch (queryError) {
-      console.error("Query Error:", queryError);
-      res.status(500).json({ valid: false, error: "Database query failed" });
-    }
-});
-
-
-// app.post("/updateCart", (req, res) => {
-//   const token = req.headers["authorization"]?.split(" ")[1];
-//   if (!token) {
-//     return res.status(401).json({ valid: false });
-//   }
-
-//   jwt.verify(token, SECRET_KEY, async (err, user) => {
-//     if (err) return res.status(403).json({ valid: false });
-
-//     try {
-// const userId=user.userId;
-// const { product_id, quantity } = req.body; 
-
-// console.log(userId, product_id, quantity);
-
-// const newProductCartQuery=`INSERT INTO cartitems (customer_id, product_id, quantity) VALUES (?,?,?)`;
-// db.query(newProductCartQuery, [userId, product_id, quantity]);
-// // connection.release(); // שחרור החיבור למאגר
-
-
-//       res.status(200).json({ valid: true }); 
-//     } catch (queryError) {
-//       console.error("Query Error:", queryError);
-//       res.status(500).json({ valid: false, error: "" });
-//     }
-//   });
-// });
-
-
-app.post("/updateCart", (req, res) => {
-  
-  const token = req.headers["authorization"]?.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ valid: false });
-  }
-
-  jwt.verify(token, SECRET_KEY, async (err, user) => {
-    if (err) return res.status(403).json({ valid: false });
-
-    try {
-      const userId = user.userId;
-      const { product_id, quantity } = req.body; 
-       // זה יעבוד טוב גם בלי התוספת הזאת כי הדאטה בייס מוגדר עם מפחות נכונים שלא יכול להוסיף לעגלה מוצר שלא קיים במוצרים
-      // if(!(await  db.query(`SELECT EXISTS(SELECT 1 FROM Products WHERE product_id = product_id)`))[0].exists)
-        if (!(await db.promise().query('SELECT EXISTS(SELECT 1 FROM Products WHERE product_id = ?) AS `exists`', [product_id]))[0][0].exists)
-
-        {
-          
-          return res.status(500).json({ valid: false, error: "The product is no longer in stock.", code: "OUT_OF_STOCK" })}
-    
-      const upsertCartItemQuery = `INSERT INTO CartItems (customer_id, product_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity), updated_at = CURRENT_TIMESTAMP`;
-      
-      db.query(upsertCartItemQuery, [userId, product_id, quantity], (error, results) => {
-        if (error) {
-          console.error("Query Error:", error);
-          return res.status(500).json({ valid: false, error: "Database error" });
-        }
-        res.status(200).json({ valid: true });
-      });
-    } catch (queryError) {
-      console.error("Query Error:", queryError);
-      res.status(500).json({ valid: false, error: "Internal server error" });
-    }
-  });
-});
-
-
-// מסלול להחזרת פרטי העגלה עבור המשתמש
-app.get("/api/cart", (req, res) => {
-  const token = req.headers["authorization"]?.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ valid: false });
-  }
-
-  jwt.verify(token, SECRET_KEY, async (err, user) => {
-    if (err) return res.status(403).json({ valid: false });
-    try {
-      const userId = user.userId;
-      const getCartItemsQuery = `SELECT p.product_id, p.product_name, p.price, ci.quantity FROM CartItems ci JOIN Products p ON ci.product_id = p.product_id WHERE ci.customer_id = ?`;
-      db.query(getCartItemsQuery, [userId], (error, results) => {
-        
-        if (error) {
-          console.error("Query Error:", error);
-          return res.status(500).json({ valid: false, error: "Database error" });
-        }
-        res.status(200).json({ valid: true, cartItems: results });
-      });
-    } catch (queryError) {
-      console.error("Query Error:", queryError);
-      res.status(500).json({ valid: false, error: "Internal server error" });
-    }
-  });
-});
-
-
-
-app.post("/login", async (req, res) => {
-  const { identity_number, password } = req.body;
-
-  try {
-    // בדיקת המשתמש במסד הנתונים
-    const userQuery = "SELECT * FROM users WHERE identity_number = ?";
-    db.query(userQuery, [identity_number], async (err, results) => {
-      if (err) return res.status(500).json({ error: "שגיאת מסד נתונים" });
-      if (results.length === 0) {
-        return res.status(400).json({ message: "תעודת זהות או סיסמה שגויים" });
-      }
-
-
-      const user = results[0]; // בדיקת התאמה של הסיסמה המוצפנת
-      const isPasswordMatch = await bcrypt.compare(
-        password,
-        user.password_hash
-      );
-      if (!isPasswordMatch) {
-        return res.status(400).json({ message: "תעודת זהות או סיסמה שגויים" });
-      }
-
-     
-           // שאילתת שאיבה של userId מטבלת customers לפי מספר הזהות
-           const customerQuery = "SELECT * FROM customers WHERE identity_number = ?";
-           db.query(customerQuery, [identity_number], (err, customerResults) => {
-             if (err) return res.status(500).json({ error: "שגיאת מסד נתונים" });
-             if (customerResults.length === 0) {
-               return res.status(400).json({ message: "הלקוח לא נמצא" });
-             }
-             const customerData = {
-              userId: customerResults[0].customer_id,
-              identity: customerResults[0].identity_number,
-              email: customerResults[0].email,
-              full_name: `${customerResults[0].first_name} ${customerResults[0].last_name}`
-            };
-            
-    // יצירת טוקן
-      const token = jwt.sign(customerData, SECRET_KEY,{expiresIn:"1h"});
-
-      res.status(200).json({ message: "התחברות הצליחה", token });
-    });
-  });
-  } catch (error) {
-    res.status(500).json({ error: "שגיאת שרת" });
-  }
-});
-
-
 
 app.post("/register", async (req, res) => {
   const {
@@ -274,7 +114,118 @@ app.post("/register", async (req, res) => {
 });
 
 
-// ממשק ניהול
+app.post("/login", async (req, res) => {
+  const { identity_number, password } = req.body;
+
+  try {
+    // בדיקת המשתמש במסד הנתונים
+    const userQuery = "SELECT * FROM users WHERE identity_number = ?";
+    db.query(userQuery, [identity_number], async (err, results) => {
+      if (err) return res.status(500).json({ error: "שגיאת מסד נתונים" });
+      if (results.length === 0) {
+        return res.status(400).json({ message: "תעודת זהות או סיסמה שגויים" });
+      }
+
+
+      const user = results[0]; // בדיקת התאמה של הסיסמה המוצפנת
+      const isPasswordMatch = await bcrypt.compare(
+        password,
+        user.password_hash
+      );
+      if (!isPasswordMatch) {
+        return res.status(400).json({ message: "תעודת זהות או סיסמה שגויים" });
+      }
+
+     
+           // שאילתת שאיבה של userId מטבלת customers לפי מספר הזהות
+           const customerQuery = "SELECT * FROM customers WHERE identity_number = ?";
+           db.query(customerQuery, [identity_number], (err, customerResults) => {
+             if (err) return res.status(500).json({ error: "שגיאת מסד נתונים" });
+             if (customerResults.length === 0) {
+               return res.status(400).json({ message: "הלקוח לא נמצא" });
+             }
+             const customerData = {
+              userId: customerResults[0].customer_id,
+              identity: customerResults[0].identity_number,
+              email: customerResults[0].email,
+              full_name: `${customerResults[0].first_name} ${customerResults[0].last_name}`
+            };
+            
+    // יצירת טוקן
+      const token = jwt.sign(customerData, SECRET_KEY,{expiresIn:"1h"});
+
+      res.status(200).json({ message: "התחברות הצליחה", token });
+    });
+  });
+  } catch (error) {
+    res.status(500).json({ error: "שגיאת שרת" });
+  }
+});
+
+
+
+app.post("/verify-token", authenticateToken, async (req, res) => {
+
+    try {
+      // שים לב שהתהליך הזה מיותר אחרי ששידרגתי את הטוקן אפשר לשלוף את זה בצד שרת מהטוקן
+      const fullNameQuery = `SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM customers WHERE identity_number = ?;`;
+      const [results] = await db.promise().query(fullNameQuery, [req.user.identity]); // מחכים לתוצאה של השאילתא
+      const fullName = results.length > 0 ? results[0].full_name : null; // מחלצים את השם המלא // מדפיסים את השם המלא // 
+      res.status(200).json({ valid: true, userName: fullName }); // מחזירים את השם המלא
+    } catch (queryError) {
+      console.error("Query Error:", queryError);
+      res.status(500).json({ valid: false, error: "Database query failed" });
+    }
+});
+
+app.post("/updateCart", authenticateToken, async(req, res) => {
+    try {
+      const userId = req.user.userId;
+      const { product_id, quantity } = req.body; 
+       // זה יעבוד טוב גם בלי התוספת הזאת כי הדאטה בייס מוגדר עם מפחות נכונים שלא יכול להוסיף לעגלה מוצר שלא קיים במוצרים
+      // if(!(await  db.query(`SELECT EXISTS(SELECT 1 FROM Products WHERE product_id = product_id)`))[0].exists)
+        if (!(await db.promise().query('SELECT EXISTS(SELECT 1 FROM Products WHERE product_id = ?) AS `exists`', [product_id]))[0][0].exists)
+        {          
+          return res.status(500).json({ valid: false, error: "The product is no longer in stock.", code: "OUT_OF_STOCK" })}
+    
+      const upsertCartItemQuery = `INSERT INTO CartItems (customer_id, product_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity), updated_at = CURRENT_TIMESTAMP`;
+
+      db.query(upsertCartItemQuery, [userId, product_id, quantity], (error, results) => {
+        if (error) {
+          console.error("Query Error:", error);
+          return res.status(500).json({ valid: false, error: "Database error" });
+        }
+        res.status(200).json({ valid: true });
+      });
+    } catch (queryError) {
+      console.error("Query Error:", queryError);
+      res.status(500).json({ valid: false, error: "Internal server error" });
+    }
+  });
+
+
+// מסלול להחזרת פרטי העגלה עבור המשתמש
+app.get("/api/cart", authenticateToken, (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const getCartItemsQuery = `SELECT p.product_id, p.product_name, p.price, ci.quantity FROM CartItems ci JOIN Products p ON ci.product_id = p.product_id WHERE ci.customer_id = ?`;
+      db.query(getCartItemsQuery, [userId], (error, results) => {
+        
+        if (error) {
+          console.error("Query Error:", error);
+          return res.status(500).json({ valid: false, error: "Database error" });
+        }
+        res.status(200).json({ valid: true, cartItems: results });
+      });
+    } catch (queryError) {
+      console.error("Query Error:", queryError);
+      res.status(500).json({ valid: false, error: "Internal server error" });
+    }
+  });
+
+
+//שאיבת כל המוצרים לכאורה אין תור בהרשאה
+//אם יש צורך בהרשאה לחשוב אם יש הבדל בין מנהל ללקוח
 app.get("/api/products", (req, res) => {
   db.query("SELECT * FROM Products", (error, results) => {
       if (error) {
@@ -284,37 +235,6 @@ app.get("/api/products", (req, res) => {
       }
   });
 });
-
-app.post("/api/products", (req, res) => {
-  const { name, price, description, quantity,category_id } = req.body;
-  const sql = "INSERT INTO Products (product_name, price, description, quantity_in_stock, category_id) VALUES (?, ?, ?, ?,?)";
-  db.query(sql, [name, price, description, quantity,category_id], (error, results) => {
-      if (error) {
-          res.status(500).send(error);
-      } else {
-          res.status(201).send("Product added");
-      }
-  });
-});
-
-
-
-app.delete("/api/products/:id", (req, res) => {
-  const productId = req.params.id;
-  db.query("DELETE FROM Products WHERE product_id = ?", [productId], (error) => {
-      if (error) {
-          res.status(500).send(error);
-      } else {
-          res.send("Product deleted");
-      }
-  });
-});
-
-
-
-
-
-
 
 
 // שליפת כל הקטגוריות

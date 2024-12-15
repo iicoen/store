@@ -61,10 +61,14 @@ const ProductManagement = () => {
   };
 
   const saveProduct = async () => {
+    const token = localStorage.getItem("adminToken");
+    console.log(editProduct);
+    
     try {
       await axios.put(
-        `${apiUrl}/api/products/${editProduct.product_id}`,
-        editProduct
+        `${apiUrl}/api/admin/products/${editProduct.product_id}`,
+        editProduct,
+        {headers: {Authorization: `Bearer ${token}`}}
       );
       fetchProducts();
       setOpenModal(false);
@@ -74,8 +78,11 @@ const ProductManagement = () => {
   };
 
   const deleteProduct = async (productId) => {
+    const token = localStorage.getItem("adminToken");
     try {
-      await axios.delete(`${apiUrl}/api/products/${productId}`);
+      await axios.delete(`${apiUrl}/api/admin/products/${productId}`,
+        {headers: {Authorization: `Bearer ${token}`}}
+      );
       fetchProducts();
       setOpenModal(false);
     } catch (error) {
@@ -84,8 +91,11 @@ const ProductManagement = () => {
   };
 
   const addProduct = async () => {
+    const token = localStorage.getItem("adminToken");
     try {
-      await axios.post(`${apiUrl}/api/products`, newProduct);
+      await axios.post(`${apiUrl}/api/admin/products`, newProduct,
+        {headers: {Authorization: `Bearer ${token}`}}
+      );
       fetchProducts();
       setNewProduct({
         name: "",

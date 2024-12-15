@@ -3,7 +3,6 @@ const router = express.Router();
 
 const db = require('../config/database');
 
-
 const jwt = require("jsonwebtoken");
 const bodyParser = require("body-parser");
 
@@ -14,15 +13,7 @@ require('dotenv').config({ path: path.join(__dirname, '../process.env') });
 const SECRET_KEY = process.env.SECRET_KEY;
 
 // const adminTokens = new Set(); // לשמירת הטוקנים של מנהלים מחוברים
-
-
-
 // const pool = require('./db'); // חיבור למסד הנתונים
-
-
-
-
-
 
 // כניסת מנהל ויצירת טוקן
 router.post("/login", (req, res) => {
@@ -127,6 +118,52 @@ router.delete('/customers/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
+
+//מוצרים
+
+router.post("/products",authenticateAdmin, (req, res) => {
+  const { name, price, description, quantity, category_id} = req.body;
+  const sql = "INSERT INTO Products (product_name, price, description, quantity_in_stock, category_id) VALUES (?, ?, ?, ?,?)";
+  db.query(sql, [name, price, description, quantity, category_id], (error, results) => {
+      if (error) {
+          res.status(500).send(error);
+      } else {
+          res.status(201).send("Product added");
+      }
+  });
+});
+
+router.put('/products/:id', authenticateAdmin, async (req, res) => {
+  const productId = req.params.id;
+  const { product_name, price, description, quantity_in_stock, category_id} = req.body;
+  console.log(product_name);
+  console.log(req.body);
+  
+  try {
+    const sql ="UPDATE products SET product_name = ?, price = ?, description = ?, quantity_in_stock = ?, category_id = ? WHERE product_id = ?";
+    const [results, fields] = await db.promise().query(sql, [product_name, price, description, quantity_in_stock, category_id, productId]);
+    console.log("SQL Results:", results); // תדפיס את תוצאות השאילתה
+    console.log("SQL Fields:", fields);   // מידע נוסף על השדות (לא תמיד נחוץ)
+
+    res.json({ message: 'Product updated successfully' });
+  } catch (error) {
+    console.error("Error executing query:", error.sqlMessage || error.message, "SQL:", error.sql);
+
+    res.status(500).json({ message: 'Error updating Product', error });
+  }
+});
+
+
+router.delete("/products/:id", authenticateAdmin, (req, res) => {
+  const productId = req.params.id;
+  db.query("DELETE FROM Products WHERE product_id = ?", [productId], (error) => {
+      if (error) {
+          res.status(500).send(error);
+      } else {
+          res.send("Product deleted");
+      }
+  });
+});
 
 
 
