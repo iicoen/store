@@ -136,19 +136,12 @@ router.post("/products",authenticateAdmin, (req, res) => {
 router.put('/products/:id', authenticateAdmin, async (req, res) => {
   const productId = req.params.id;
   const { product_name, price, description, quantity_in_stock, category_id} = req.body;
-  console.log(product_name);
-  console.log(req.body);
-  
+
   try {
     const sql ="UPDATE products SET product_name = ?, price = ?, description = ?, quantity_in_stock = ?, category_id = ? WHERE product_id = ?";
     const [results, fields] = await db.promise().query(sql, [product_name, price, description, quantity_in_stock, category_id, productId]);
-    console.log("SQL Results:", results); // תדפיס את תוצאות השאילתה
-    console.log("SQL Fields:", fields);   // מידע נוסף על השדות (לא תמיד נחוץ)
-
     res.json({ message: 'Product updated successfully' });
   } catch (error) {
-    console.error("Error executing query:", error.sqlMessage || error.message, "SQL:", error.sql);
-
     res.status(500).json({ message: 'Error updating Product', error });
   }
 });
