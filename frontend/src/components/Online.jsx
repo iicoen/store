@@ -25,7 +25,8 @@ const Online = ({ user }) => {
   const token = localStorage.getItem("token");
   const [showCart, setShowCart] = useState(false);
   const [categories, setCategories] = useState([]);
-
+  // state לניהול מצב טעינה
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     if (!token) {
       navigate("/login");
@@ -40,8 +41,7 @@ const Online = ({ user }) => {
             setUserName(data.userName);
             fetchCart(); // טוען את העגלה מהשרת
           } else {
-            console.log(22222);
-            
+
             navigate("/login");
           }
         })
@@ -51,13 +51,20 @@ const Online = ({ user }) => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const response = await fetch(`${apiUrl}/api/products`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      setFuulProducts(data);
-      setProducts(data);
+      setIsLoading(true); // התחלת טעינה
+      try{
+        const response = await fetch(`${apiUrl}/api/products`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        setFuulProducts(data);
+        setProducts(data);
+      }
+      finally {
+        setIsLoading(false); // סיום טעינה
+      }
+
     //   console.log(data.map(d)=>{
     //     return
     //     "product_id:",d.product_id,  "שם המוצר ותיאור:",d.product_id} );
@@ -250,7 +257,11 @@ const Online = ({ user }) => {
 </div>
 
       <div className="products-list">
-        {products.map((product) => (
+      {isLoading ? (
+            <p>טוען נתונים...</p> // חיווי למשתמש
+        ) : (
+     
+        products.map((product) => (
           <motion.div
             className="product-card"
             key={product.id}
@@ -268,6 +279,9 @@ const Online = ({ user }) => {
               onChange={(e) => {
                 handleQuantityChange(e, product.product_id);
               }}
+              inputProps={{
+                min: 1, // הגדרת מינימום
+              }}
             />
             <Button
               variant="contained"
@@ -279,7 +293,9 @@ const Online = ({ user }) => {
               הוסף לסל
             </Button>
           </motion.div>
-        ))}
+        ))
+       
+      )}
       </div>
 
       <div className="shopping-page">
@@ -314,12 +330,16 @@ const Online = ({ user }) => {
               onChange={(e) =>
                 handleQuantityChange2(item.product_id, e.target.value)
               }
+              inputProps={{
+                min: 1, // הגדרת מינימום
+              }}
               onBlur={(e) => updateCartItem(item.product_id, e.target.value)}
             />
             <Button
               variant="outlined"
               color="secondary"
               onClick={() => removeCartItem(item.product_id)}
+          
             >
               מחק
             </Button>

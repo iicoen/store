@@ -160,7 +160,7 @@ router.delete("/products/:id", authenticateAdmin, (req, res) => {
 
 
 // הוספת קטגוריה חדשה
-app.post('categories', authenticateAdmin, async (req, res) => {
+router.post('categories', authenticateAdmin, async (req, res) => {
   const { category_name } = req.body;
   try {
       await db.promise().query('INSERT INTO Categories (category_name) VALUES (?)', [category_name]);
