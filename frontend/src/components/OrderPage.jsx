@@ -20,6 +20,7 @@ export default function OrderPage(
     const handleOrder = async () => {
     let cartItems="d";
         setIsProcessing(true);
+        console.log("11111111" ,cartItems);
         try {
             const response = await fetch(`${apiUrl}/api/checkout`, {
                 method: "POST",
@@ -27,6 +28,7 @@ export default function OrderPage(
                     Authorization: `Bearer ${token}` },
                 body: JSON.stringify(
                     { cartItems, paymentMethod }
+
 
                 ),
             });

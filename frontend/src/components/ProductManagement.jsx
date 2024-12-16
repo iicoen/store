@@ -16,7 +16,6 @@ import {
   Autocomplete,
 } from "@mui/material";
 
-
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -61,12 +60,12 @@ const ProductManagement = () => {
   };
 
   const saveProduct = async () => {
-    const token = localStorage.getItem("adminToken"); 
+    const token = localStorage.getItem("adminToken");
     try {
       await axios.put(
         `${apiUrl}/api/admin/products/${editProduct.product_id}`,
         editProduct,
-        {headers: {Authorization: `Bearer ${token}`}}
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchProducts();
       setOpenModal(false);
@@ -78,9 +77,9 @@ const ProductManagement = () => {
   const deleteProduct = async (productId) => {
     const token = localStorage.getItem("adminToken");
     try {
-      await axios.delete(`${apiUrl}/api/admin/products/${productId}`,
-        {headers: {Authorization: `Bearer ${token}`}}
-      );
+      await axios.delete(`${apiUrl}/api/admin/products/${productId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       fetchProducts();
       setOpenModal(false);
     } catch (error) {
@@ -91,9 +90,9 @@ const ProductManagement = () => {
   const addProduct = async () => {
     const token = localStorage.getItem("adminToken");
     try {
-      await axios.post(`${apiUrl}/api/admin/products`, newProduct,
-        {headers: {Authorization: `Bearer ${token}`}}
-      );
+      await axios.post(`${apiUrl}/api/admin/products`, newProduct, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       fetchProducts();
       setNewProduct({
         name: "",
@@ -151,7 +150,7 @@ const ProductManagement = () => {
         {filteredProducts.map((product) => (
           <Grid item xs={12} sm={6} md={4} key={product.product_id}>
             <Card>
-            {/* <Card style={{ width: "200px", height: "150px" }}> */}
+              {/* <Card style={{ width: "200px", height: "150px" }}> */}
               <CardContent>
                 <Typography variant="h6">{product.product_name}</Typography>
                 <Typography>מחיר: {product.price} ₪</Typography>
@@ -244,16 +243,18 @@ const ProductManagement = () => {
               </TextField> */}
 
               <Autocomplete
-  options={categories}
-  getOptionLabel={(option) => option.category_name}
-  onChange={(event, newValue) =>{
-    setNewProduct({ ...newProduct, category_id: newValue?.category_id || "" })
-  }
-  
-  }
-  renderInput={(params) => <TextField {...params} label="קטגוריה" fullWidth />}
-/>
-
+                options={categories}
+                getOptionLabel={(option) => option.category_name}
+                onChange={(event, newValue) => {
+                  setNewProduct({
+                    ...newProduct,
+                    category_id: newValue?.category_id || "",
+                  });
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} label="קטגוריה" fullWidth />
+                )}
+              />
             </Grid>
           </Grid>
           <Button
@@ -277,12 +278,14 @@ const ProductManagement = () => {
             marginTop: "10%",
             width: "40%",
             borderRadius: "8px",
+            direction: "rtl", // הוספת כיוון מימין לשמאל
+            textAlign: "right", // יישור הטקסט לימין
           }}
         >
           <Typography variant="h5">עריכת מוצר</Typography>
           {editProduct && (
             <>
-              <Grid container spacing={2}>
+              <Grid container spacing={2} direction="row-reverse">
                 <Grid item xs={12}>
                   <TextField
                     label="שם מוצר"
@@ -294,24 +297,59 @@ const ProductManagement = () => {
                         product_name: e.target.value,
                       })
                     }
+                    InputProps={{
+                      style: { textAlign: "right", direction: "rtl" },
+                    }}
+                    InputLabelProps={{
+                      style: { textAlign: "right", direction: "rtl" },
+                    }}
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField
                     label="מחיר"
-                    type="number"
-                    fullWidth
-                    value={editProduct.price}
+                    type="number" fullWidth value={editProduct.price}
                     onChange={(e) =>
-                      setEditProduct({
-                        ...editProduct,
-                        price: e.target.value,
-                      })
-                    }
-                  />
+                      setEditProduct({...editProduct, price: e.target.value,})}/>
                 </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="תיאור מוצר"
+                    fullWidth
+                    value={editProduct.description}
+                    onChange={(e) =>
+                      setEditProduct({...editProduct, description: e.target.value,})}/>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="כמות במלאי"
+                    type="number" fullWidth value={editProduct.quantity_in_stock}
+                    onChange={(e) =>
+                      setEditProduct({...editProduct, quantity_in_stock: e.target.value,})}/>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="כמות מומלצת"
+                    type="number" fullWidth value={editProduct.recommended_quantity}
+                    onChange={(e) =>
+                      setEditProduct({...editProduct, recommended_quantity: e.target.value,})}/>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="קישור לתמונה"
+                    type="number" fullWidth value={editProduct.image_url}
+                    onChange={(e) =>
+                      setEditProduct({...editProduct, image_url: e.target.value,})}/>
+                </Grid>
+
+
               </Grid>
-              <Button
+
+
+
+
+
+              {/* <Button
                 variant="contained"
                 color="primary"
                 onClick={saveProduct}
@@ -326,7 +364,36 @@ const ProductManagement = () => {
                 style={{ marginTop: "10px", marginLeft: "10px" }}
               >
                 מחק
-              </Button>
+              </Button> */}
+
+              <Grid
+                container
+                spacing={2}
+                justifyContent="flex-end"
+                sx={{ marginTop: "20px" }}
+                direction="row-reverse"
+              >
+                <Grid item>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={saveProduct}
+                    sx={{ width: "80px", height: "40px" }}
+                  >
+                    שמור
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => deleteProduct(editProduct.product_id)}
+                    sx={{ width: "80px", height: "40px" }}
+                  >
+                    מחק
+                  </Button>
+                </Grid>
+              </Grid>
             </>
           )}
         </Box>
