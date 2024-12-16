@@ -3,8 +3,8 @@ const mysql = require("mysql2");
 const app = express();
 const port = 3001;
 const cors = require("cors");
-// לצורך פונקצית אימות
 
+// לצורך פונקצית אימות
 const bodyParser = require("body-parser");
 
 const path = require('path');
@@ -247,16 +247,7 @@ app.get('/api/categories', async (req, res) => {
     }
 });
 
-// הוספת קטגוריה חדשה
-app.post('/api/categories', async (req, res) => {
-    const { category_name } = req.body;
-    try {
-        await db.promise().query('INSERT INTO Categories (category_name) VALUES (?)', [category_name]);
-        res.status(201).json({ message: 'קטגוריה נוספה בהצלחה' });
-    } catch (error) {
-        res.status(500).json({ error: 'שגיאה בהוספת קטגוריה' });
-    }
-});
+
 
 
 
@@ -346,7 +337,6 @@ router.post("/checkout", async (req, res) => {
 
 
 
-
 // לצורך תשלומים
 // Function to calculate total
 function calculateTotal(cartItems) {
@@ -382,7 +372,6 @@ function sendInvoice(cartItems, email) {
   });
 }
 
-// module.exports = router;
 
 
 

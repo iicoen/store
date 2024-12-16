@@ -139,7 +139,7 @@ router.put('/products/:id', authenticateAdmin, async (req, res) => {
 
   try {
     const sql ="UPDATE products SET product_name = ?, price = ?, description = ?, quantity_in_stock = ?, category_id = ? WHERE product_id = ?";
-    const [results, fields] = await db.promise().query(sql, [product_name, price, description, quantity_in_stock, category_id, productId]);
+    await db.promise().query(sql, [product_name, price, description, quantity_in_stock, category_id, productId]);
     res.json({ message: 'Product updated successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error updating Product', error });
@@ -159,7 +159,16 @@ router.delete("/products/:id", authenticateAdmin, (req, res) => {
 });
 
 
-
+// הוספת קטגוריה חדשה
+app.post('categories', authenticateAdmin, async (req, res) => {
+  const { category_name } = req.body;
+  try {
+      await db.promise().query('INSERT INTO Categories (category_name) VALUES (?)', [category_name]);
+      res.status(201).json({ message: 'קטגוריה נוספה בהצלחה' });
+  } catch (error) {
+      res.status(500).json({ error: 'שגיאה בהוספת קטגוריה' });
+  }
+});
 
 
 module.exports = router;

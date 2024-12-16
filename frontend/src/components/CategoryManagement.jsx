@@ -6,7 +6,7 @@ const CategoryManagement = () => {
 
     const handleAddCategory = async () => {
         try {
-            await axios.post(`${apiUrl}/api/categories`, { category_name: categoryName });
+            await axios.post(`${apiUrl}/api/admin/categories`, { category_name: categoryName });
             alert('קטגוריה נוספה בהצלחה!');
             setCategoryName('');
         } catch (error) {
