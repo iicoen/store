@@ -42,6 +42,7 @@ const authenticateAdmin = (req, res, next) => {
       if (decoded.role !== "admin") {
           return res.status(403).json({ error: "Access denied" });
       }
+      req.decoded=decoded;
       next();
   } catch (err) {
       return res.status(403).json({ error: "Invalid or expired token" });
@@ -170,5 +171,25 @@ router.post('categories', authenticateAdmin, async (req, res) => {
   }
 });
 
+
+
+// פונקציית אימות טוקן
+router.get('/verify', authenticateAdmin, (req, res) => {
+  // const authHeader = req.headers['authorization'];
+  // const token = authHeader && authHeader.split(' ')[1]; // קבלת הטוקן מהכותרת
+
+  // if (!token) {
+  //   return res.status(401).json({ message: 'Token is missing' });
+  // }
+
+  // try {
+  //   const decoded = jwt.verify(token, SECRET_KEY); // אימות הטוקן
+    res.status(200).json({ message: 'Token is valid', admin: req.decoded }); // תגובה למקרה שהטוקן תקין
+  // } catch (error) {
+  //   console.error('Token verification failed:', error.message);
+  //   res.status(403).json({ message: 'Invalid token' }); // שגיאה אם הטוקן לא תקין
+  // }
+
+});
 
 module.exports = router;

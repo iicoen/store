@@ -8,8 +8,13 @@ const router = express.Router();
 
 router.post("/", async (req, res) => {
   const { email } = req.body;
+  
   try {
     const [rows] = await db.promise().query("SELECT * FROM customers WHERE email = ?", [email]);
+    const name = `${rows[0].first_name} ${rows[0].last_name}`;
+    // console.log(rows);
+    // console.log(name);
+    
     if (rows.length === 0) return res.status(404).json({ message: "User not found" });
     const token = crypto.randomBytes(32).toString("hex");
     const resetLink = `http://localhost:3000/reset-password/${token}`;
@@ -24,13 +29,32 @@ router.post("/", async (req, res) => {
       },
     });
 
+    const emailHtml = `
+  <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right; background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+    <h2 style="color: #333;">איפוס סיסמה</h2>
+    <p style="font-size: 16px; color: #555;">
+      שלום ${name},
+    </p>
+    <p style="font-size: 16px; color: #555;">
+      לחץ על הקישור הבא כדי לאפס את הסיסמה שלך:
+    </p>
+    <a href="${resetLink}" style="display: inline-block; background-color: #007BFF; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-size: 16px;">
+      אפס סיסמה
+    </a>
+    <p style="font-size: 14px; color: #aaa; margin-top: 20px;">
+      אם לא ביקשת לאפס את הסיסמה שלך, התעלם ממייל זה.
+    </p>
+  </div>
+`;
+
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Password Reset",
-      text: `לחץ על הקישור הבא כדי לאפס את הסיסמה שלך:
-       ${resetLink}`,
+      html: emailHtml, // HTML תוכן
     });
+
+
 
     res.json({ message: "Password reset email sent" });
   } catch (error) {

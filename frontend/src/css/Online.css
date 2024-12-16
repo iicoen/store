@@ -1,8 +1,24 @@
 * {
   box-sizing: border-box;
+
 }    
+.header{
+  background-color: #007bff;
+  width: 100%;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+
+}
+h4{
+  margin: 20px;
+}
 
 .shopping-page {
+  background-color: rgb(125, 185, 229);
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -22,6 +38,7 @@
 }
 
 .product-card {
+  background-color: #ddd;
   padding: 15px;
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -39,6 +56,7 @@
 }
 
 .cart-section {
+  background-color: antiquewhite;
   height: auto; /* התאמת גובה דינמית */
   max-height: 80vh; /* הגבלת גובה הסל למסך */
   overflow-y: auto; /* גלילה פנימית אם התוכן חורג */
@@ -69,6 +87,7 @@
 .categories-list button:hover {
   background-color: #007bff;
   color: white;
+
 }
 
 .shopping-page-container {

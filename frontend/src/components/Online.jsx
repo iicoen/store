@@ -216,11 +216,12 @@ const Online = ({ user }) => {
 
   return (
     <div className="shopping-page">
+      <div className="header">
       <Typography variant="h4" className="page-title">
         ברוכים הבאים לחנות שלנו!
       </Typography>
       <div>
-        <h2>ברוך הבא, {userName}</h2>
+        <h4>ברוך הבא {userName}</h4>
       </div>
       <Button
         variant="contained"
@@ -232,7 +233,7 @@ const Online = ({ user }) => {
       >
         יציאה
       </Button>
-
+      </div>
 
       <div className="shopping-page-container">
       <div className="main-content">
@@ -357,7 +358,7 @@ const Online = ({ user }) => {
 
       </div>
 
-      <HostagesTicker />
+      {/* <HostagesTicker /> */}
     </div>
   );
 };

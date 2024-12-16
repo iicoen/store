@@ -5,10 +5,13 @@ import apiUrl from "../config.js";
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const token = localStorage.getItem("token");
 
   const handleForgotPassword = async () => {
     try {
-      const response = await axios.post(`${apiUrl}/api/forgot-password`, { email });
+      const response = await axios.post(`${apiUrl}/api/forgot-password`, { email },
+        {headers: {Authorization: `Bearer ${token}`} }
+      );
 
       setMessage(response.data.message);
       if(response.data.message==="Password reset email sent")

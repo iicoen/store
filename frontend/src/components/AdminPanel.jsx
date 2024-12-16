@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ProductManagement from "./ProductManagement";
 import CustomerManagement from "./CustomerManagement";
 import OrderManagement from "./OrderManagement";
@@ -13,12 +13,29 @@ const AdminPanel = () => {
   const [selectedSection, setSelectedSection] = useState("products");
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem("adminToken");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+      try {
+        await axios.get(`${apiUrl}/api/admin/verify`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (error) {
+        console.error("Token verification failed:", error.response?.data);
+        localStorage.removeItem("adminToken");
+        navigate("/login");
+      }
+    };
 
+    verifyToken();
+  }, [navigate]);
 
   const logoutAdmin = async () => {
     const token = localStorage.getItem("adminToken");
-    navigate("/login");
-
     try {
       await axios.post(
         `${apiUrl}/api/admin/logout`,
@@ -27,10 +44,12 @@ const AdminPanel = () => {
       );
       localStorage.removeItem("adminToken"); // מחיקת הטוקן מקומית
       console.log("Logged out successfully");
+      navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error.response?.data);
     }
   };
+
   const renderSection = () => {
     switch (selectedSection) {
       case "products":
@@ -49,7 +68,6 @@ const AdminPanel = () => {
   };
 
   return (
-  
     <Box
       sx={{
         minHeight: "100vh",
