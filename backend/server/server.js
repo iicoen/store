@@ -152,7 +152,7 @@ app.post("/login", async (req, res) => {
             };
             
     // יצירת טוקן
-      const token = jwt.sign(customerData, SECRET_KEY,{expiresIn:"1h"});
+      const token = jwt.sign(customerData, SECRET_KEY,{expiresIn:"1m"});
 
       res.status(200).json({ message: "התחברות הצליחה", token });
     });
@@ -371,6 +371,162 @@ function sendInvoice(cartItems, email) {
       html: emailBody,
   });
 }
+
+
+
+
+
+
+// מסלול לשליפת החשבוניות של המשתמש
+app.get("/api/invoices", authenticateToken, (req, res) => {
+  const userId = req.user.userId; // מזהה המשתמש מהטוקן
+  const query = `SELECT i.invoice_id, i.created_at, i.total_amount, i.payment_status FROM Invoices i WHERE i.customer_id = ? ORDER BY i.created_at DESC`;
+
+  db.query(query, [userId], (error, invoices) => {
+    if (error) {
+      console.error("Error fetching invoices:", error);
+      return res.status(500).json({ error: "Database error" });
+    }
+    res.status(200).json({ invoices });
+  });
+});
+
+// מסלול לשליפת פרטי חשבונית מסוימת
+app.get("/api/invoice/:invoiceId/items", authenticateToken, (req, res) => {
+
+  const { invoiceId } = req.params;
+  const query = `
+    SELECT p.product_name, ii.quantity, ii.unit_price
+    FROM InvoiceItems ii
+    JOIN Products p ON ii.product_id = p.product_id
+    WHERE ii.invoice_id = ?
+  `;
+
+  db.query(query, [invoiceId], (error, items) => {
+    if (error) {
+      console.error("Error fetching invoice items:", error);
+      return res.status(500).json({ error: "Database error" });
+    }
+    res.status(200).json({ items });
+  });
+});
+
+
+
+
+
+app.delete('/api/clearCart', authenticateToken, async (req, res) => {
+  const userId = req.user.userId; 
+
+  try {
+    await db.promise().query('DELETE FROM cartitems WHERE customer_id = ?', [userId]);
+    res.status(200).json({ message: 'Cart cleared successfully' });
+  } catch (err) {
+    console.error('Error clearing cart:', err);
+    res.status(500).json({ message: 'Failed to clear cart' });
+  }
+});
+
+
+
+
+
+
+
+
+
+// // מפתח סודי לחתימה
+//כמובן לגזור לפרוסס ENV ולהחליף סיסמה אם משתשמשים בזה
+// const ACCESS_TOKEN_SECRET = "yourAccessTokenSecret";
+// const REFRESH_TOKEN_SECRET = "yourRefreshTokenSecret";
+
+// // זמן תוקף
+// const ACCESS_TOKEN_EXPIRATION = "15m"; // 15 דקות
+// const REFRESH_TOKEN_EXPIRATION = "7d"; // 7 ימים
+
+// // פונקציה ליצירת Access Token
+// const generateAccessToken = (user) => {
+//   return jwt.sign({ id: user.id, username: user.username }, ACCESS_TOKEN_SECRET, {
+//     expiresIn: ACCESS_TOKEN_EXPIRATION,
+//   });
+// };
+
+// // פונקציה ליצירת Refresh Token
+// const generateRefreshToken = (user) => {
+//   return jwt.sign({ id: user.id, username: user.username }, REFRESH_TOKEN_SECRET, {
+//     expiresIn: REFRESH_TOKEN_EXPIRATION,
+//   });
+// };
+
+
+
+// const refreshTokens = new Map(); // מפה לשמירת Refresh Tokens
+
+
+// app.post("/api/login", (req, res) => {
+//   const { username, password } = req.body;
+
+//   // דוגמה לבדיקה מול בסיס הנתונים
+//   const user = findUserInDatabase(username, password);
+//   if (!user) {
+//     return res.status(401).json({ message: "Invalid credentials" });
+//   }
+
+//   // יצירת הטוקנים
+//   const accessToken = generateAccessToken(user);
+//   const refreshToken = generateRefreshToken(user);
+
+//   // שמירת Refresh Token במפה (או בבסיס נתונים)
+//   refreshTokens.set(user.id, refreshToken);
+
+//   // שליחת טוקנים ללקוח
+//   res.json({
+//     accessToken,
+//     refreshToken, // אפשר גם לשלוח את זה כ-Cookie מאובטח
+//   });
+// });
+
+
+// app.post("/api/refresh-token", (req, res) => {
+//   const refreshToken = req.body.refreshToken;
+
+//   if (!refreshToken) {
+//     return res.status(401).json({ message: "Refresh Token is required" });
+//   }
+
+//   // בדיקה אם ה-Refresh Token חוקי ושמור אצלנו
+//   jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, (err, payload) => {
+//     if (err || !refreshTokens.get(payload.id)) {
+//       return res.status(403).json({ message: "Invalid Refresh Token" });
+//     }
+
+//     // יצירת Access Token חדש
+//     const user = { id: payload.id, username: payload.username };
+//     const newAccessToken = generateAccessToken(user);
+
+//     res.json({ newAccessToken });
+//   });
+// });
+
+
+
+
+// const authenticateAccessToken = (req, res, next) => {
+//   const token = req.headers["authorization"]?.split(" ")[1];
+
+//   if (!token) {
+//     return res.status(401).json({ message: "Access Token is required" });
+//   }
+
+//   jwt.verify(token, ACCESS_TOKEN_SECRET, (err, payload) => {
+//     if (err) {
+//       return res.status(403).json({ message: "Invalid or expired Access Token" });
+//     }
+
+//     req.user = payload; // לשימוש במידע המשתמש
+//     next();
+//   });
+// };
 
 
 

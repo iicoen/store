@@ -13,6 +13,7 @@ import "../css/Online.css";
 import apiUrl from "../config.js";
 import HostagesTicker from "./HostagesTicker";
 import MessagePopup from "./MessagePopup";
+import useTokenExpirationWatcher from "../hooks/useTokenExpirationWatcher";
 
 const Online = ({ user }) => {
   const [cart, setCart] = useState([]);
@@ -27,6 +28,32 @@ const Online = ({ user }) => {
   const [categories, setCategories] = useState([]);
   // state לניהול מצב טעינה
   const [isLoading, setIsLoading] = useState(false);
+
+
+  const [searchTerm, setSearchTerm] = useState(""); // ניהול מונח החיפוש
+  // קריאה ל-Hook
+  useTokenExpirationWatcher(); 
+const handleSearch = (e) => {
+  const value = e.target.value.toLowerCase();
+  setSearchTerm(value);
+  if (value === "") {
+    setProducts(fuulProducts); // החזרת כל המוצרים
+  } else {
+    const filtered = fuulProducts.filter((product) =>
+      product.product_name.toLowerCase().includes(value)
+    );
+    setProducts(filtered);
+  }
+};
+
+const clearSearch = () => {
+  setSearchTerm("");
+  setProducts(fuulProducts); // החזרת כל המוצרים
+};
+
+
+
+
   useEffect(() => {
     if (!token) {
       navigate("/login");
@@ -65,6 +92,10 @@ const Online = ({ user }) => {
         setIsLoading(false); // סיום טעינה
       }
 
+
+     
+      
+
     //   console.log(data.map(d)=>{
     //     return
     //     "product_id:",d.product_id,  "שם המוצר ותיאור:",d.product_id} );
@@ -73,7 +104,6 @@ const Online = ({ user }) => {
     //  console.log(data.map((d)=>`product_id:${d.product_id}, product_name:${d.product_name}, description:${d.description}`))
 };
       
-
 
 
 
@@ -185,6 +215,24 @@ const Online = ({ user }) => {
     fetchCart();
   };
 
+
+const clearCart = async () => {
+  try {
+    await fetch(`${apiUrl}/api/clearCart`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setCart([]); // מרוקן את הסל מקומית
+  } catch (err) {
+    console.error("Error clearing cart:", err);
+    setMessage("שגיאה בעת מחיקת הסל.");
+    setTimeout(() => setMessage(""), 3000);
+  }
+};
+
+
   // פונקציה למחיקת מוצר מהעגלה
   const removeCartItem = async (productId) => {
     await fetch(`${apiUrl}/api/removeCartItem?productId=${productId}`, {
@@ -257,6 +305,26 @@ const Online = ({ user }) => {
   ))}
 </div>
 
+<div className="search-container">
+  <TextField
+    label="חיפוש מוצרים"
+    variant="outlined"
+    value={searchTerm}
+    onChange={handleSearch}
+    className="search-input"
+  />
+  {searchTerm && (
+    <Button
+      variant="text"
+      color="secondary"
+      onClick={clearSearch}
+      className="clear-search-button"
+    >
+      X
+    </Button>
+  )}
+</div>
+
       <div className="products-list">
       {isLoading ? (
             <p>טוען נתונים...</p> // חיווי למשתמש
@@ -310,13 +378,22 @@ const Online = ({ user }) => {
       <Button
         variant="outlined"
         color="primary"
-        onClick={() => navigate("/orders")}
+        onClick={() => navigate("/previousInvoices")}
         className="view-orders-button"
       >
         הזמנות קודמות
       </Button>
 
         <Typography variant="h5">סל הקניות</Typography>
+        <Button
+        className="buttonDeleteCart"
+  variant="outlined"
+  color="secondary"
+  onClick={clearCart}
+>
+  מחק את כל הסל
+</Button>
+
         {cart.map((item, index) => (
           <div key={index}>
             <Typography>

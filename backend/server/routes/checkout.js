@@ -4,83 +4,234 @@ const paypal = require("@paypal/checkout-server-sdk");
 const nodemailer = require("nodemailer");
 const { authenticateToken } = require("../middlewares/auth");
 
-// PayPal configuration
-const payPalClient = new paypal.core.PayPalHttpClient(
-  new paypal.core.SandboxEnvironment(process.env.PAYPAL_CLIENT_ID, process.env.PAYPAL_SECRET)
-);
+const db = require('../config/database');
 
 
+const mysql = require('mysql2/promise');
 
 
-// Route: Handle Checkout
 router.post("/checkout", authenticateToken, async (req, res) => {
   const { cartItems, paymentMethod } = req.body;
 
-  try {
-    if (paymentMethod === "paypal") {
-      // Create PayPal order
-      const request = new paypal.orders.OrdersCreateRequest();
-      request.requestBody({
-        intent: "CAPTURE",
-        purchase_units: [
-          {
-            amount: {
-              currency_code: "USD",
-              value:
-                //  calculateTotal(cartItems)
-                89,
-            },
-          },
-        ],
-      });
+const customerId = req.user.userId;
 
-      const order = await payPalClient.execute(request);
-      return res.json({ success: true, orderId: order.result.id });
-    } else {
-      // לטפל באמצעי תשלום אחרים
-      sendInvoice(cartItems, "customer@example.com"); // החלף בדואר אלקטרוני דינמי
-      res.json({ success: true, message: "הזמנה בוצעה בהצלחה!" });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "שגיאה בעיבוד התשלום" });
-  }
+// קריאה לפונקציה ליצירת חשבונית ושליחתה למייל
+generateInvoice(cartItems, req.user.email).catch(console.error);
+
+
+//קריאה לפונקציה הכנסה לטבלאות חשבונות ישנים
+  saveInvoiceToDatabase(customerId, cartItems)
+///קריאה לפונקציה מחיקה מטבלת עגלת קניות
+deletingCartAfterPurchase(customerId);
+
+
+
+//קריאה לפונקציה  מחיקה מהמלאי אולי בתוך הקודם
+
+res.json({ success: true, message: "הזמנה בוצעה בהצלחה!" });
+
 });
 
-// Function to calculate total
-function calculateTotal(cartItems) {
-  return cartItems
-    .reduce((total, item) => total + item.price * item.quantity, 0)
-    .toFixed(2);
-}
 
-// Function to send an invoice email
-function sendInvoice(cartItems, email) {
+//פונקציה הכנסה לטבלאות חשבונות ישנים
+const deletingCartAfterPurchase = async (userId)=>{
+
+  // const userId = req.user.userId; 
+
+  try {
+    await db.promise().query('DELETE FROM cartitems WHERE customer_id = ?', [userId]);
+    // res.status(200).json({ message: 'Cart cleared successfully' });
+  } catch (err) {
+    console.error('Error clearing cart:', err);
+    // res.status(500).json({ message: 'Failed to clear cart' });
+  }
+};
+
+
+// פונקציה להוספת חשבונית והפריטים שלה
+const saveInvoiceToDatabase = async (customerId, products) => {
+  const totalAmount = fanctotalAmount(products);
+  try {
+    // 1. הוספת רשומה לטבלת Invoices
+    const [invoiceResult] = await db.promise().query(
+      `INSERT INTO invoices (customer_id, total_amount, payment_status) VALUES (?, ?, 'Pending')`,
+      [customerId, totalAmount]
+    );
+  // console.log(invoiceResult);
+
+    const invoiceId = invoiceResult.insertId; // קבלת ה-invoice_id שנוצר
+    // console.log(invoiceId);
+
+    // 2. הוספת פריטים לטבלת InvoiceItems
+    const  invoiceItemsQueries  =  products.map((product) =>
+       db.promise().query(
+        `INSERT INTO invoiceItems (invoice_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)`,
+        [invoiceId, product.product_id, product.quantity, product.price]
+      )
+    );
+
+    await Promise.all(invoiceItemsQueries);
+
+    // השלמת הטרנזקציה
+    // await connection.commit();
+
+    console.log(`Invoice #${invoiceId} and its items saved successfully.`);
+    return invoiceId;
+  } catch (error) {
+    // ביטול הטרנזקציה במקרה של שגיאה
+    // await connection.rollback();
+    // console.error("Error saving invoice:", error.message);
+    // throw error;
+  } finally {
+    // await connection.end();
+  }
+};
+
+
+//פונקציה לסדר להפוך את המילים לא ממש הצליח
+const fixRTL = (text) => {
+  return text.split(" ").reverse().join(" ");
+};
+
+
+const generateInvoice = async (products, customerEmail) => {
+  const fs = require("fs");
+  const pdf = require("pdfkit");
+  const moment = require("moment");
+
+  // גופן עברי
+  // const hebrewFontPath = "../fonts/OpenSansHebrew-Regular.ttf"; 
+  const hebrewFontPath = "./fonts/Rubik-Italic-VariableFont_wght.ttf";
+
+  // יצירת מספר סידורי לחשבונית
+  const invoiceNumber = Date.now();
+
+  // חישוב סיכום כולל
+  const totalAmount = products.reduce(
+    (sum, product) => sum + product.price * product.quantity,
+    0
+  );
+
+  // יצירת תאריך ושעה נוכחיים
+  const invoiceDate = moment().format("YYYY-MM-DD HH:mm:ss");
+
+  // יצירת חשבונית PDF
+  const doc = new pdf();
+  const invoicePath = `חשבונית_${invoiceNumber}.pdf`;
+  const writeStream = fs.createWriteStream(invoicePath);
+  doc.pipe(writeStream);
+
+  // שימוש בגופן עברי
+  doc.registerFont("hebrew", hebrewFontPath);
+
+  // כותרת החשבונית
+  doc.font("hebrew").fontSize(20).text("חשבונית מס", { align: "center" });
+  doc.moveDown();
+
+  // פרטי החשבונית
+  doc
+    .font("hebrew")
+    .fontSize(12)
+    .text(`מספר חשבונית: ${invoiceNumber}`, { align: "right" });
+  doc.text(`תאריך: ${invoiceDate}`, { align: "right" });
+  doc.moveDown();
+
+  // טבלת מוצרים
+  doc.fontSize(14).text("מוצרים", { align: "center", underline: true });
+  doc.moveDown();
+
+
+  
+  products.forEach((product, index) => {
+    const line = `${index + 1}. ${product.product_name} - ${product.price} ש"ח x ${product.quantity} = ${product.price * product.quantity} ש"ח`;
+    const fixedLine = fixRTL(line); // הפיכת סדר המילים בלבד
+    doc.text(fixedLine, { align: "right" });
+  });
+
+  const totalLine = `סך הכל לתשלום: ${totalAmount} ש"ח`;
+  const fixedTotalLine = fixRTL(totalLine);
+  doc.font("hebrew").fontSize(16).text(fixedTotalLine, { align: "right" });
+  
+
+
+  doc.end();
+
+  // המתנה לסיום כתיבת ה-PDF
+  await new Promise((resolve) => writeStream.on("finish", resolve));
+
+  // שליחת החשבונית במייל
   const transporter = nodemailer.createTransport({
-    service: "Gmail",
+    service: "gmail",
     auth: {
-      user: "your-email@gmail.com",
-      pass: "your-email-password",
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
     },
   });
 
-  const emailBody = `
-        <h2>חשבונית רכישה</h2>
-        <p>תודה על ההזמנה!</p>
-        <ul>
-            ${cartItems
-              .map((item) => `<li>${item.name} - ${item.quantity} יחידות</li>`)
-              .join("")}
-        </ul>
-        <p>סכום כולל: ${calculateTotal(cartItems)} USD</p>
-    `;
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: customerEmail,
+    subject: `חשבונית מס #${invoiceNumber}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; text-align: right; direction: rtl;">
+        <h1>חשבונית מס</h1>
+        <p>שלום,</p>
+        <p>מצורפת חשבונית מס עבור הרכישה שלך.</p>
+        <p><strong>מספר חשבונית:</strong> ${invoiceNumber}</p>
+        <p><strong>תאריך:</strong> ${invoiceDate}</p>
+        <p>סך הכל לתשלום: <strong>${totalAmount} ש"ח</strong></p>
+        <p>תודה על הקנייה! נשמח לראותך שוב באתרנו.</p>
+        <a href="http://localhost:3000" style="display: inline-block; margin-top: 10px; padding: 10px 15px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">לחץ כאן לקנייה נוספת</a>
+      </div>
+    `,
+    attachments: [
+      {
+        filename: `חשבונית_${invoiceNumber}.pdf`,
+        path: invoicePath,
+      },
+    ],
+  };
 
-  transporter.sendMail({
-    from: "your-email@gmail.com",
-    to: email,
-    subject: "חשבונית הזמנה",
-    html: emailBody,
-  });
+  await transporter.sendMail(mailOptions);
+
+  // console.log(`Invoice sent to ${customerEmail}`);
+  console.log(`חשבונית נשלחה ל-${customerEmail}`);
+
+  // מחיקת קובץ החשבונית לאחר שליחה
+  fs.unlinkSync(invoicePath);
+
+};
+
+
+
+
+
+
+// // דוגמה לקריאה לפונקציה
+// const customerId = 1; // מזהה לקוח
+// const products = [
+//   { product_id: 101, quantity: 2, price: 50 },
+//   { product_id: 102, quantity: 1, price: 30 },
+// ];
+// const totalAmount = products.reduce((sum, product) => sum + product.quantity * product.price, 0);
+
+// saveInvoiceToDatabase(customerId, products, totalAmount)
+//   .then((invoiceId) => console.log(`Invoice ID: ${invoiceId} created successfully.`))
+//   .catch((err) => console.error("Error:", err));
+
+
+  // פונקצייה לחישוב סיכום כולל
+
+const fanctotalAmount = (products)=>{
+  const totalAmount = products.reduce(
+    (sum, product) => sum + product.price * product.quantity,
+    0
+  );
+  return totalAmount;
+
 }
+
+
+
 
 module.exports = router;

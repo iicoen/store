@@ -7,6 +7,7 @@ import AdminPanel from './components/AdminPanel';
 import OrderPage from './components/OrderPage';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
+import PreviousInvoices from './components/PreviousInvoices';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/forgotPassword" element={<ForgotPassword />} />
         {/* <Route path="/reset-password" element={<ResetPassword />} /> */}
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/previousInvoices" element={<PreviousInvoices />} />
 
       </Routes>
     </Router>
