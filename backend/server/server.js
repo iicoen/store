@@ -152,7 +152,7 @@ app.post("/login", async (req, res) => {
             };
             
     // יצירת טוקן
-      const token = jwt.sign(customerData, SECRET_KEY,{expiresIn:"1m"});
+      const token = jwt.sign(customerData, SECRET_KEY,{expiresIn:"1h"});
 
       res.status(200).json({ message: "התחברות הצליחה", token });
     });
