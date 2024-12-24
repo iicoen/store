@@ -148,7 +148,7 @@ const clearSearch = () => {
   };
 
   const addToCart = async (e, product) => {
-    const quantity = quantities[product.product_id] || 1; // משתמש בכמות עבור כל מוצר מהמצב
+    const quantity = quantities[product.product_id] || 1; 
     try {
       const res = await fetch(`${apiUrl}/updateCart`, {
         method: "POST",

@@ -3,10 +3,10 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../process.env') });
 
 const SECRET_KEY = process.env.SECRET_KEY;
-let num = 0;
+// let num = 0;
 function authenticateToken(req, res, next) {
-  num++;
-  console.log(num);
+  // num++;
+  // console.log(num);
 
   const token = req.headers["authorization"]?.split(" ")[1];
 

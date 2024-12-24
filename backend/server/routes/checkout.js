@@ -3,6 +3,8 @@ const router = express.Router();
 const paypal = require("@paypal/checkout-server-sdk");
 const nodemailer = require("nodemailer");
 const { authenticateToken } = require("../middlewares/auth");
+const { isValidIsraeliId } = require("../middlewares/isValidIsraeliId");
+
 
 const db = require('../config/database');
 
@@ -231,6 +233,33 @@ const fanctotalAmount = (products)=>{
 
 }
 
+
+
+
+
+router.post('/validatePayment', (req, res) => {
+  const { creditCardNumber, expiryDate, cardOwnerId } = req.body;
+    if (!isValidIsraeliId(cardOwnerId)) {
+      return res.status(400).json({ success: false, message: "תעודת הזהות אינה תקינה" });
+  }
+
+
+  // בדיקת תקינות מספר כרטיס אשראי
+  const isValidCreditCard = /^[0-9]{16}$/.test(creditCardNumber);
+  // בדיקת תקינות מספר זהות ישראלי
+  const isValidId = /^[0-9]{9}$/.test(cardOwnerId); 
+  // בדיקת תוקף שלא עבר
+  const [month, year] = expiryDate.split('/').map(Number);
+  const currentYear = new Date().getFullYear() % 100;
+  const currentMonth = new Date().getMonth() + 1;
+  const isValidExpiry = year > currentYear || (year === currentYear && month >= currentMonth);
+
+  if (!isValidCreditCard || !isValidId || !isValidExpiry|| month>12) {
+      return res.status(400).json({ success: false, message: "פרטי התשלום אינם תקינים" });
+  }
+
+  res.status(200).json({ success: true, message: "פרטי התשלום תקינים" });
+});
 
 
 
