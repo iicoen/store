@@ -8,7 +8,6 @@ const { isValidIsraeliId } = require("../middlewares/isValidIsraeliId");
 
 const db = require('../config/database');
 
-
 const mysql = require('mysql2/promise');
 
 
@@ -77,7 +76,7 @@ const saveInvoiceToDatabase = async (customerId, products) => {
     // השלמת הטרנזקציה
     // await connection.commit();
 
-    console.log(`Invoice #${invoiceId} and its items saved successfully.`);
+    // console.log(`Invoice #${invoiceId} and its items saved successfully.`);
     return invoiceId;
   } catch (error) {
     // ביטול הטרנזקציה במקרה של שגיאה
@@ -196,8 +195,8 @@ const generateInvoice = async (products, customerEmail) => {
 
   await transporter.sendMail(mailOptions);
 
-  // console.log(`Invoice sent to ${customerEmail}`);
-  console.log(`חשבונית נשלחה ל-${customerEmail}`);
+
+  // console.log(`חשבונית נשלחה ל-${customerEmail}`);
 
   // מחיקת קובץ החשבונית לאחר שליחה
   fs.unlinkSync(invoicePath);

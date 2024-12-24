@@ -6,6 +6,7 @@
 .pnp.js
 process.env
 /fonts
+*.pdf
 
 # testing
 /coverage
